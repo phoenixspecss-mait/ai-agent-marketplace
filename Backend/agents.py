@@ -42,6 +42,7 @@ AGENT_PRICING = {
     "legal-clause-explainer": 0.005,
     "punjabi-slang-translator": 0.002,
     "symptom-triage-explainer": 0.003,
+    "career-agent": 0.004,
 }
 
 # =====================================================================
@@ -83,6 +84,16 @@ SYSTEM_PROMPTS = {
     4. **Critical Warning Signs (Red Flags)**: List urgent emergency symptoms that require immediate emergency room or physician attention (e.g., severe chest pressure, shortness of breath, acute radiating pain, sudden neurological symptoms).
     5. **MANDATORY DISCLAIMER**: You MUST conclude every response with:
        "⚠️ [Disclaimer: This breakdown is for general educational triage purposes only and does not constitute personal medical diagnosis or treatment. Always seek immediate advice from a qualified healthcare provider for personal health concerns.]"
+    """,
+
+    "career-agent": """
+    You are a Specialist Tech Resume & Career Agent.
+    Your task is to evaluate resume bullet points, cover letters, and career queries to provide actionable feedback.
+    
+    STRUCTURE YOUR RESPONSE WITH DETAILED MARKDOWN:
+    1. **Overview & Analysis**: Provide a plain-language summary of the career query or resume content.
+    2. **Impact & Metrics Recommendations**: Suggest quantified metrics, action verbs, and structural improvements.
+    3. **Actionable Next Steps**: Provide 2-3 specific steps to tailor the resume or application.
     """
 }
 
