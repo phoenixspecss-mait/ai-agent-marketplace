@@ -190,13 +190,46 @@ class ApiService {
       String demoAnswer = "";
       if (agentId.contains("symptom") || agentId.contains("triage") || agentId.contains("health") || agentId.contains("medical")) {
         demoAnswer =
-            "**Medical Triage & Health Guidance**\n\n* **Query Focus:** \"$query\"\n\n* **Primary Recommendations:**\n  1. **Diet & Routine Adjustments:** Emphasize a heart-healthy diet low in sodium and saturated fats, manage stress, and maintain physician-approved physical activity.\n  2. **Monitoring & Risk Factors:** Track symptoms, blood pressure, and cholesterol levels closely.\n  3. **Warning Indicators:** Seek emergency medical care immediately if you experience severe chest discomfort, shortness of breath, or pain radiating to the arm/jaw.\n\n⚠️ *[Disclaimer: This explanation is for educational triage purposes only and does not replace direct consultation with a licensed medical professional.]*";
+            "### 🩺 Comprehensive Medical Triage & Clinical Guidance\n\n"
+            "**Primary Consultation Topic:** \"$query\"\n\n"
+            "#### 1. Clinical Overview & Educational Explanation\n"
+            "Cardiovascular health and arterial management require proactive medical oversight. When arterial narrowing or blockage is suspected, optimal blood circulation relies heavily on managing blood viscosity, endothelial health, and plaque stabilization.\n\n"
+            "#### 2. Comprehensive Lifestyle, Diet & Preventive Plan\n"
+            "* **Dietary Protocols:** Focus on a Mediterranean-style diet low in saturated fats, trans-fats, and refined sugars. Incorporate omega-3 fatty acids (flaxseeds, walnuts, salmon), high-soluble fiber (oats, legumes), and antioxidant-rich greens.\n"
+            "* **Sodium & Hydration:** Limit daily sodium intake to under 1,500mg - 2,000mg to alleviate arterial pressure. Maintain consistent hydration.\n"
+            "* **Exercise & Movement:** Engage in 30 minutes of physician-approved, moderate aerobic activity (e.g. brisk walking) 5 days per week. Avoid abrupt high-intensity strain without clearance.\n"
+            "* **Risk Factor Control:** Strictly refrain from tobacco/nicotine use and minimize stress through routine sleep hygiene.\n\n"
+            "#### 3. Key Symptoms & Progression Metrics to Track\n"
+            "* Monitor resting blood pressure, heart rate recovery, and exercise tolerance daily.\n"
+            "* Document any unusual exertional fatigue or transient shortness of breath.\n\n"
+            "#### 4. 🚨 Critical Red Flags (Emergency Indicators)\n"
+            "Seek **immediate emergency medical evaluation (call 911/emergency services)** if you experience:\n"
+            "* Sudden chest pain, tightness, or squeezing pressure.\n"
+            "* Pain radiating to the jaw, neck, back, or left arm.\n"
+            "* Unexplained shortness of breath, cold sweats, or acute dizziness.\n\n"
+            "⚠️ *[Disclaimer: This explanation is for educational triage purposes only and does not constitute formal medical diagnosis or treatment. Always consult a licensed cardiologist or primary care physician for personal care.]*";
       } else if (agentId.contains("slang") || agentId.contains("punjabi") || agentId.contains("translate") || agentId.contains("linguis")) {
         demoAnswer =
-            "**Linguistic & Regional Slang Translation**\n\n* **Query Analyzed:** \"$query\"\n* **Direct Meaning:** Regional colloquial expression translating informal conversational vibe.\n* **Cultural Context:** Captures social mood and native dialect nuances.";
+            "### 🗣️ Specialist Linguistic & Cultural Analysis\n\n"
+            "**Submitted Phrase / Query:** \"$query\"\n\n"
+            "#### 1. Direct English Translation & Literal Meaning\n"
+            "Provides an accurate conversion into standard English, preserving both literal context and authentic emotional tone.\n\n"
+            "#### 2. Cultural & Regional Context Breakdown\n"
+            "Examines the social origin, youth pop-culture references, and regional dialect nuances embedded within the expression.\n\n"
+            "#### 3. Conversational Usage & Vibe Analysis\n"
+            "Describes the informal social setting, tone of excitement or camaraderie, and appropriate situational usage.";
       } else {
         demoAnswer =
-            "**Legal & Clause Analysis**\n\n* **Query Analyzed:** \"$query\"\n* **Core Obligations:** Outlines legal rights, liabilities, and enforcement terms associated with your inquiry.\n* **Plain Language Breakdown:** Ensure all timelines and risk allocations are reviewed prior to contract execution.\n\n⚠️ *[Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]*";
+            "### ⚖️ Executive Legal & Contract Clause Analysis\n\n"
+            "**Analyzed Legal Inquiry:** \"$query\"\n\n"
+            "#### 1. Legal Overview & Plain-Language Summary\n"
+            "Breaks down complex legal terminology, dispute resolution mechanisms, and contractual risk allocations into accessible language.\n\n"
+            "#### 2. Core Rights, Obligations & Restrictions\n"
+            "* **Primary Provisions:** Outlines the mandatory legal duties, performance timelines, and enforcement criteria.\n"
+            "* **Liability Allocation:** Identifies indemnification scope, remedies, and risk transfer clauses.\n\n"
+            "#### 3. Strategic Recommendations & Negotiation Points\n"
+            "* Review indemnification caps, termination notice periods, and governing jurisdiction before executing agreement.\n\n"
+            "⚠️ *[Disclaimer: This analysis is for educational and informational purposes only and does not constitute formal legal counsel. Always consult a qualified attorney for binding contract advice.]*";
       }
 
       return {
