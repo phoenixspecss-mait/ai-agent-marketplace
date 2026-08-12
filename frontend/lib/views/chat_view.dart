@@ -92,12 +92,29 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     if (agentId.isEmpty) {
       final lower = text.toLowerCase();
       // Inspect high-priority domain keywords first
-      if (lower.contains("cardiac") ||
+      // Check Legal domain first
+      if (lower.contains("legal") ||
+          lower.contains("law") ||
+          lower.contains("contract") ||
+          lower.contains("clause") ||
+          lower.contains("agreement") ||
+          lower.contains("court") ||
+          lower.contains("arbitration") ||
+          lower.contains("liability") ||
+          lower.contains("nda") ||
+          lower.contains("tenant") ||
+          lower.contains("lease") ||
+          lower.contains("waiver") ||
+          lower.contains("house") ||
+          lower.contains("property") ||
+          lower.contains("deed") ||
+          lower.contains("mortgage") ||
+          lower.contains("closing")) {
+        agentId = "legal-clause-explainer";
+      } else if (lower.contains("cardiac") ||
           lower.contains("heart") ||
           lower.contains("artery") ||
           lower.contains("arteries") ||
-          lower.contains("diet") ||
-          lower.contains("routine") ||
           lower.contains("blood") ||
           lower.contains("symptom") ||
           lower.contains("pain") ||
@@ -113,9 +130,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           lower.contains("illness") ||
           lower.contains("condition") ||
           lower.contains("chest") ||
-          lower.contains("advice") ||
-          lower.contains("treatment") ||
-          lower.contains("block")) {
+          lower.contains("hospital") ||
+          lower.contains("clinic") ||
+          lower.contains("patient") ||
+          lower.contains("medication") ||
+          lower.contains("prescription")) {
         agentId = "symptom-triage-explainer";
       } else if (lower.contains("slang") ||
           lower.contains("bhojpuri") ||
@@ -127,19 +146,6 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           lower.contains("idiom") ||
           lower.contains("colloquial")) {
         agentId = "punjabi-slang-translator";
-      } else if (lower.contains("contract") ||
-          lower.contains("clause") ||
-          lower.contains("legal") ||
-          lower.contains("agreement") ||
-          lower.contains("law") ||
-          lower.contains("court") ||
-          lower.contains("arbitration") ||
-          lower.contains("liability") ||
-          lower.contains("nda") ||
-          lower.contains("tenant") ||
-          lower.contains("lease") ||
-          lower.contains("waiver")) {
-        agentId = "legal-clause-explainer";
       } else if (lower.contains("jee") ||
           lower.contains("math") ||
           lower.contains("calculus") ||
