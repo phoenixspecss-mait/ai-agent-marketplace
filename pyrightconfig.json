@@ -1,0 +1,9 @@
+{
+  "pythonPath": "${workspaceFolder}/Backend/venv/bin/python",
+  "venvPath": ".",
+  "venv": "Backend/venv",
+  "extraPaths": [
+    "Backend",
+    "Backend/ai-agent-marketplace-main"
+  ]
+}
