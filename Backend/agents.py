@@ -165,25 +165,45 @@ def _call_openrouter(model_name: str, system_instruction: str, prompt: str) -> s
 
 
 def _get_fallback_response(agent_id: str, query: str) -> str:
+    """Dynamic fallback response generator if LLM keys are missing or offline."""
+    query_clean = query.strip()
+
+    # Check for basic math queries (e.g. 2+3)
+    if any(op in query_clean for op in ['+', '-', '*', '/']) and any(char.isdigit() for char in query_clean):
+        try:
+            expr = "".join(c for c in query_clean if c in "0123456789.+-*/ ")
+            if expr:
+                val = eval(expr, {"__builtins__": None}, {})
+                return f"**Calculation Result:**\n\n`{query_clean}` = **{val}**"
+        except Exception:
+            pass
+
     if agent_id == "legal-clause-explainer":
         return (
-            "**Core Takeaways:**\n\n"
-            "* **No Court or Jury Trial:** You give up your right to take legal disputes to a standard court or jury.\n"
-            "* **Individual Arbitration & Class Action Waiver:** All claims must be resolved individually through binding arbitration.\n\n"
-            "⚠️ [Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]"
+            f"### ⚖️ Legal & Contractual Analysis\n\n"
+            f"**Query Focus:** \"{query_clean}\"\n\n"
+            f"1. **Core Legal Concept:** This query addresses contractual obligations, provisions, or rights.\n"
+            f"2. **Plain Language Breakdown:** Ensure all terms, timelines, and liabilities are clearly reviewed.\n"
+            f"3. **Key Takeaways:** Verify dispute resolution and liability limits before execution.\n\n"
+            f"⚠️ [Disclaimer: This explanation is for informational purposes only and does not constitute formal legal advice.]"
         )
     elif agent_id == "punjabi-slang-translator":
         return (
-            "**Direct Translation:**\n"
-            "\"Today's vibe is absolutely peak/top-tier, let's go cruising on the gedhi route!\"\n\n"
-            "**Vibe Breakdown:** Expresses high excitement, peak quality vibes, and cruising around with friends."
+            f"### 🗣️ Regional & Cultural Linguistics Breakdown\n\n"
+            f"**Submitted Phrase:** \"{query_clean}\"\n\n"
+            f"1. **Direct Translation:** Explains the literal and conversational meaning in proper English.\n"
+            f"2. **Cultural Context:** Captures informal tone, slang nuances, and social mood."
         )
     elif agent_id == "symptom-triage-explainer":
         return (
-            "Explanation: Sprain management follows R.I.C.E protocol (Rest, Ice, Compression, Elevation).\n\n"
-            "⚠️ [Disclaimer: This is for general educational purposes only. Always consult a healthcare professional for medical concerns.]"
+            f"### 🩺 Clinical Symptom Triage Guidance\n\n"
+            f"**Health Query:** \"{query_clean}\"\n\n"
+            f"1. **Educational Overview:** Provides guidance on symptom tracking and wellness routines.\n"
+            f"2. **Red Flags:** Seek emergency medical care immediately for severe chest pain, dyspnea, or acute symptoms.\n\n"
+            f"⚠️ [Disclaimer: This is for educational triage purposes only. Consult a healthcare professional for personal medical concerns.]"
         )
-    return "Specialist agent response generated successfully."
+    return f"**Analysis for:** \"{query_clean}\""
+
 
 # =====================================================================
 # CORE EXECUTION FUNCTION
@@ -205,8 +225,8 @@ def run_specialist(agent_id: str, query: str) -> str:
         model_name = OPENROUTER_MODEL_MAP.get(agent_id, "google/gemini-2.0-flash")
         try:
             return _call_openrouter(model_name, sys_prompt, full_prompt)
-        except Exception:
-            pass
+        except Exception as openrouter_err:
+            print(f"OpenRouter call failed: {openrouter_err}")
 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or api_key == "your_gemini_api_key_here":
@@ -214,7 +234,7 @@ def run_specialist(agent_id: str, query: str) -> str:
 
     try:
         client = get_client()
-        models_to_try = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-flash-latest']
+        models_to_try = ['gemini-flash-latest', 'gemini-pro-latest']
 
         for model_name in models_to_try:
             try:
@@ -240,10 +260,11 @@ def run_specialist(agent_id: str, query: str) -> str:
                         text_content = response.text.strip()
                     if text_content:
                         return text_content
-            except Exception:
+            except Exception as gemini_err:
+                print(f"Gemini model {model_name} failed: {gemini_err}")
                 continue
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Gemini client execution failed: {e}")
 
     return _get_fallback_response(agent_id, query)
 
