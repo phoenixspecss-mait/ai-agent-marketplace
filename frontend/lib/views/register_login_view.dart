@@ -139,6 +139,11 @@ class _RegisterLoginViewState extends State<RegisterLoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 900) {
+      return _buildDesktopAuthLayout();
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
@@ -452,6 +457,227 @@ class _RegisterLoginViewState extends State<RegisterLoginView> {
           ),
         ),
       ],
+    );
+  Widget _buildDesktopAuthLayout() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A110F),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top Header Navbar (Image 5)
+            Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Color(0xFF192A25), width: 1)),
+              ),
+              child: Row(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.emeraldGreen.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.hub_rounded, color: AppTheme.emeraldGreen, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Expert AI",
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: ["Marketplace", "Agents", "Developers", "Documentation"].map((link) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          link,
+                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text("Sign In", style: TextStyle(color: Colors.white, fontSize: 14)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.emeraldGreen,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      elevation: 0,
+                    ),
+                    child: const Text("Sign Up", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  ),
+                ],
+              ),
+            ),
+
+            // Centered Auth Box (Image 5)
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Container(
+                    width: 440,
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131D1A),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF23322E), width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.emeraldGreen.withValues(alpha: 0.15),
+                          blurRadius: 30,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1D2A27),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.3)),
+                          ),
+                          child: const Icon(Icons.hub_rounded, color: AppTheme.emeraldGreen, size: 28),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Expert AI",
+                          style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "VERIFIED AGENTS • MICRO-PAYMENT MARKETPLACE",
+                          style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                        ),
+                        const SizedBox(height: 28),
+
+                        _buildCustomInputField(
+                          label: "EMAIL ADDRESS",
+                          hintText: "e.g. alex@example.com",
+                          controller: _email,
+                          focusNode: _emailFocus,
+                          icon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildCustomInputField(
+                          label: "PASSWORD",
+                          hintText: "Enter your password",
+                          controller: _password,
+                          focusNode: _passwordFocus,
+                          icon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        const SizedBox(height: 8),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const ForgotPasswordView()),
+                              );
+                            },
+                            child: const Text("Forgot Password?", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 13)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _handleSubmit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.emeraldGreen,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: _loading
+                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                                : const Text("Continue", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        Row(
+                          children: const [
+                            Expanded(child: Divider(color: Color(0xFF23322E))),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text("OR", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                            Expanded(child: Divider(color: Color(0xFF23322E))),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: _loading ? null : _signInWithGoogle,
+                            icon: const Icon(Icons.g_mobiledata_rounded, color: Colors.white, size: 24),
+                            label: const Text("Continue with Google", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF23322E)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text("Don't have an account? Sign up", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Footer (Image 5)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFF192A25), width: 1)),
+              ),
+              child: Row(
+                children: [
+                  const Text("© 2026 Expert AI. All rights reserved. Verified Agents & Micro-payment Marketplace.", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                  const Spacer(),
+                  Wrap(
+                    spacing: 20,
+                    children: ["Privacy Policy", "Terms of Service", "Security", "Status", "Contact Support"].map((f) {
+                      return Text(f, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12));
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
