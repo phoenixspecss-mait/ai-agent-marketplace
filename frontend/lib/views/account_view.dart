@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:expert_ai/services/api_service.dart';
+import 'package:expert_ai/services/database/database_history_item.dart';
+import 'package:expert_ai/services/database/database_service.dart';
 import 'package:expert_ai/theme/app_theme.dart';
 
 class AccountView extends StatefulWidget {
@@ -20,6 +22,20 @@ class AccountView extends StatefulWidget {
 class _AccountViewState extends State<AccountView> {
   int _selectedTopUpAmount = 10;
   bool _isProcessing = false;
+  late Future<List<DatabaseHistoryItem>> _historyFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshData();
+  }
+
+  void _refreshData() {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? "demo_user_01";
+    setState(() {
+      _historyFuture = DatabaseService.instance().fetchHistory(userId);
+    });
+  }
 
   Future<void> _handleTopUp([int? amountOverride]) async {
     final amount = amountOverride ?? _selectedTopUpAmount;
@@ -31,6 +47,7 @@ class _AccountViewState extends State<AccountView> {
     if (!mounted) return;
     setState(() => _isProcessing = false);
     widget.onBalanceUpdated(newBal);
+    _refreshData();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -153,10 +170,10 @@ class _AccountViewState extends State<AccountView> {
                 curve: Curves.easeOutCubic,
                 builder: (context, balVal, child) {
                   return Text(
-                    "\$${balVal.toStringAsFixed(2)}",
+                    "\$${balVal.toStringAsFixed(4)}",
                     style: const TextStyle(
                       color: AppTheme.emeraldGreen,
-                      fontSize: 52,
+                      fontSize: 48,
                       fontWeight: FontWeight.w800,
                     ),
                   );
@@ -267,7 +284,7 @@ class _AccountViewState extends State<AccountView> {
                           ),
                         ),
                         Text(
-                          "${isDeduction ? '-' : '+'}\$${amount.toStringAsFixed(3)}",
+                          "${isDeduction ? '-' : '+'}\$${amount.toStringAsFixed(4)}",
                           style: TextStyle(
                             color: isDeduction ? Colors.white70 : AppTheme.emeraldGreen,
                             fontWeight: FontWeight.bold,
@@ -287,172 +304,167 @@ class _AccountViewState extends State<AccountView> {
   }
 
   // =========================================================================
-  // DESKTOP WALLET & ACTIVITY VIEW (Image 2)
+  // DYNAMIC DESKTOP WALLET & ACTIVITY VIEW
   // =========================================================================
   Widget _buildDesktopWalletView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(36.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row: Title & Subtitle + Export CSV & Add Funds Buttons (Image 2)
-          Row(
+    return FutureBuilder<List<DatabaseHistoryItem>>(
+      future: _historyFuture,
+      builder: (context, snapshot) {
+        final historyItems = snapshot.data ?? [];
+        final totalSpend = historyItems
+            .where((item) => item.isDeduction)
+            .fold<double>(0.0, (sum, item) => sum + item.amount);
+        final totalQueries = historyItems.where((item) => item.isDeduction).length;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(36.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              // Header Row: Title & Subtitle + Export CSV & Add Funds Buttons
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          "Wallet & Activity",
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Manage your billing and review AI consultation micropayments.",
+                          style: TextStyle(fontSize: 15, color: Color(0xFF9CA3AF)),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Refresh Button
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: AppTheme.emeraldGreen),
+                    onPressed: _refreshData,
+                    tooltip: "Refresh Wallet",
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Add Funds Button
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddFundsDialog(),
+                    icon: const Icon(Icons.add_rounded, color: Colors.black, size: 20),
+                    label: const Text("Add Funds", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.emeraldGreen,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 36),
+
+              // 3 Top Summary Stat Cards
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 900;
+                  return isWide
+                      ? Row(
+                          children: [
+                            Expanded(child: _buildDesktopAvailableBalanceCard()),
+                            const SizedBox(width: 20),
+                            Expanded(child: _buildDesktopSpendCard(totalSpend)),
+                            const SizedBox(width: 20),
+                            Expanded(child: _buildDesktopQueriesCard(totalQueries, totalSpend)),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildDesktopAvailableBalanceCard(),
+                            const SizedBox(height: 16),
+                            _buildDesktopSpendCard(totalSpend),
+                            const SizedBox(height: 16),
+                            _buildDesktopQueriesCard(totalQueries, totalSpend),
+                          ],
+                        );
+                },
+              ),
+              const SizedBox(height: 36),
+
+              // Recent Activity Table (Dynamic)
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF131D1A),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF23322E), width: 1),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      "Wallet & Activity",
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
+                  children: [
+                    // Table Header Bar
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            "Recent Activity",
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          const Text(
+                            "x402 Protocol Settlement Ledger",
+                            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      "Manage your billing and review AI consultation micropayments.",
-                      style: TextStyle(fontSize: 15, color: Color(0xFF9CA3AF)),
+                    const Divider(height: 1, color: Color(0xFF23322E)),
+
+                    // Columns Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      color: const Color(0xFF0C1412),
+                      child: Row(
+                        children: const [
+                          Expanded(flex: 2, child: Text("DATE / TIME", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8))),
+                          Expanded(flex: 5, child: Text("DESCRIPTION & AGENT QUERY TYPE", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8))),
+                          Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text("AMOUNT", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)))),
+                        ],
+                      ),
                     ),
+                    const Divider(height: 1, color: Color(0xFF23322E)),
+
+                    // Dynamic Activity Rows
+                    if (historyItems.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: Text("No transaction activity recorded yet.", style: TextStyle(color: Color(0xFF9CA3AF))),
+                      )
+                    else
+                      ...historyItems.map((item) {
+                        return _buildDesktopActivityRow(
+                          item.timeAgo,
+                          item.agentName,
+                          item.query,
+                          item.amount,
+                          item.icon,
+                          isPositive: !item.isDeduction,
+                        );
+                      }),
                   ],
-                ),
-              ),
-
-              // Export CSV Button
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
-                label: const Text("Export CSV", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF23322E)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Add Funds Button (Image 2)
-              ElevatedButton.icon(
-                onPressed: () => _showAddFundsDialog(),
-                icon: const Icon(Icons.add_rounded, color: Colors.black, size: 20),
-                label: const Text("Add Funds", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.emeraldGreen,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 36),
-
-          // 3 Top Summary Stat Cards (Image 2)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 900;
-              return isWide
-                  ? Row(
-                      children: [
-                        Expanded(child: _buildDesktopAvailableBalanceCard()),
-                        const SizedBox(width: 20),
-                        Expanded(child: _buildDesktopSpendCard()),
-                        const SizedBox(width: 20),
-                        Expanded(child: _buildDesktopQueriesCard()),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        _buildDesktopAvailableBalanceCard(),
-                        const SizedBox(height: 16),
-                        _buildDesktopSpendCard(),
-                        const SizedBox(height: 16),
-                        _buildDesktopQueriesCard(),
-                      ],
-                    );
-            },
-          ),
-          const SizedBox(height: 36),
-
-          // Recent Activity Table (Image 2)
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF131D1A),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF23322E), width: 1),
-            ),
-            child: Column(
-              children: [
-                // Table Header Bar
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      const Text(
-                        "Recent Activity",
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const Spacer(),
-                      OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.filter_list_rounded, color: Color(0xFF9CA3AF), size: 16),
-                        label: const Text("Filter", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF23322E)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, color: Color(0xFF23322E)),
-
-                // Columns Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  color: const Color(0xFF0C1412),
-                  child: Row(
-                    children: const [
-                      Expanded(flex: 2, child: Text("DATE / TIME", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8))),
-                      Expanded(flex: 5, child: Text("DESCRIPTION & QUERY TYPE", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8))),
-                      Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: Text("AMOUNT", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)))),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, color: Color(0xFF23322E)),
-
-                // Sample Activity Rows (Image 2)
-                _buildDesktopActivityRow("Oct 24, 2026\n14:32 PST", "Contract Review: NDA standard terms", "Deep Analysis Model • 450 tokens", -0.45, Icons.description_outlined),
-                _buildDesktopActivityRow("Oct 24, 2026\n10:15 PST", "Quick Citation: California Labor Code § 2802", "Fast Search Model • 120 tokens", -0.08, Icons.find_in_page_outlined),
-                _buildDesktopActivityRow("Oct 23, 2026\n09:00 PST", "Auto-Reload (Visa ending in 4242)", "Wallet Top-up", 50.00, Icons.account_balance_wallet_outlined, isPositive: true),
-                _buildDesktopActivityRow("Oct 22, 2026\n16:45 PST", "Precedent Search: Tech IP Assignment", "Deep Analysis Model • 890 tokens", -0.92, Icons.gavel_outlined),
-
-                const Divider(height: 1, color: Color(0xFF23322E)),
-
-                // Table Pagination Footer
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.chevron_left_rounded, color: Color(0xFF9CA3AF), size: 20),
-                      SizedBox(width: 16),
-                      Text("Page 1 of 12", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
-                      SizedBox(width: 16),
-                      Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF), size: 20),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -476,7 +488,7 @@ class _AccountViewState extends State<AccountView> {
           ),
           const SizedBox(height: 14),
           Text(
-            "\$${widget.currentBalance.toStringAsFixed(2)} USD",
+            "\$${widget.currentBalance.toStringAsFixed(4)} USD",
             style: const TextStyle(color: AppTheme.emeraldGreen, fontSize: 36, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
@@ -484,7 +496,7 @@ class _AccountViewState extends State<AccountView> {
             children: const [
               Icon(Icons.sync_rounded, color: AppTheme.emeraldGreen, size: 14),
               SizedBox(width: 6),
-              Text("Auto-reload enabled", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 12)),
+              Text("Pre-funded x402 Metro-Card Wallet", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 12)),
             ],
           ),
         ],
@@ -492,7 +504,7 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
-  Widget _buildDesktopSpendCard() {
+  Widget _buildDesktopSpendCard(double totalSpend) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -506,11 +518,11 @@ class _AccountViewState extends State<AccountView> {
           const Text("THIS MONTH'S SPEND", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
           const SizedBox(height: 14),
           RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+            text: TextSpan(
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
               children: [
-                TextSpan(text: "\$57.20"),
-                TextSpan(text: " / \$100 limit", style: TextStyle(fontSize: 16, color: Color(0xFF9CA3AF), fontWeight: FontWeight.normal)),
+                TextSpan(text: "\$${totalSpend.toStringAsFixed(4)}"),
+                const TextSpan(text: " / \$10.00 soft limit", style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF), fontWeight: FontWeight.normal)),
               ],
             ),
           ),
@@ -518,20 +530,21 @@ class _AccountViewState extends State<AccountView> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: 0.57,
+              value: (totalSpend / 10.0).clamp(0.0, 1.0),
               backgroundColor: const Color(0xFF1E2C29),
               color: AppTheme.emeraldGreen,
               minHeight: 6,
             ),
           ),
           const SizedBox(height: 8),
-          const Text("57% of soft limit", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 11)),
+          Text("${((totalSpend / 10.0) * 100).toStringAsFixed(1)}% of soft limit", style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopQueriesCard() {
+  Widget _buildDesktopQueriesCard(int totalQueries, double totalSpend) {
+    final avgCost = totalQueries > 0 ? (totalSpend / totalQueries) : 0.004;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -544,13 +557,13 @@ class _AccountViewState extends State<AccountView> {
         children: [
           const Text("TOTAL QUERIES (30D)", style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
           const SizedBox(height: 14),
-          const Text("342", style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800)),
+          Text("$totalQueries", style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           Row(
-            children: const [
-              Icon(Icons.pie_chart_outline_rounded, color: Color(0xFF9CA3AF), size: 14),
-              SizedBox(width: 6),
-              Text("Avg. \$0.16 per query", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+            children: [
+              const Icon(Icons.pie_chart_outline_rounded, color: Color(0xFF9CA3AF), size: 14),
+              const SizedBox(width: 6),
+              Text("Avg. \$${avgCost.toStringAsFixed(4)} per query", style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
             ],
           ),
         ],
@@ -611,9 +624,9 @@ class _AccountViewState extends State<AccountView> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                "${isPositive ? '+' : ''}\$${amount.abs().toStringAsFixed(2)}",
+                "${isPositive ? '+' : '-'}\$${amount.abs().toStringAsFixed(4)}",
                 style: TextStyle(
-                  color: isPositive ? AppTheme.emeraldGreen : Colors.white,
+                  color: isPositive ? AppTheme.emeraldGreen : Colors.white70,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),

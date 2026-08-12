@@ -334,7 +334,7 @@ class _AppShellState extends State<AppShell> {
                               const Icon(Icons.account_balance_wallet_outlined, color: AppTheme.emeraldGreen, size: 16),
                               const SizedBox(width: 8),
                               Text(
-                                "Wallet: \$${_walletBalance.toStringAsFixed(2)}",
+                                "Wallet: \$${_walletBalance.toStringAsFixed(4)}",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 13,
