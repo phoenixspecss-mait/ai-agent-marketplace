@@ -40,7 +40,9 @@ class ApiService {
 
   static Future<double> getWalletBalance(String userId) async {
     try {
-      final url = Uri.parse("$baseUrl/api/marketplace/wallet/balance?user_id=$userId");
+      final url = Uri.parse(
+        "$baseUrl/api/marketplace/wallet/balance?user_id=$userId",
+      );
       final response = await http.get(url).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -56,11 +58,13 @@ class ApiService {
   static Future<double> topUpWallet(String userId, double amount) async {
     try {
       final url = Uri.parse("$baseUrl/api/marketplace/wallet/topup");
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"user_id": userId, "amount": amount}),
-      ).timeout(const Duration(seconds: 4));
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"user_id": userId, "amount": amount}),
+          )
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -91,15 +95,17 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse("$baseUrl/api/marketplace/call");
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "user_id": userId,
-          "agent_id": agentId,
-          "query": query,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "user_id": userId,
+              "agent_id": agentId,
+              "query": query,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
 
@@ -127,7 +133,8 @@ class ApiService {
         if (detail is Map) {
           msg = detail['message']?.toString() ?? msg;
           cost = (detail['cost_usd'] as num?)?.toDouble() ?? cost;
-          balance = (detail['current_balance_usd'] as num?)?.toDouble() ?? balance;
+          balance =
+              (detail['current_balance_usd'] as num?)?.toDouble() ?? balance;
         } else if (detail is String) {
           msg = detail;
         }
@@ -143,7 +150,9 @@ class ApiService {
         final detail = data['detail'];
         return {
           "success": false,
-          "message": detail is String ? detail : (detail?.toString() ?? "Execution failed. Please try again."),
+          "message": detail is String
+              ? detail
+              : (detail?.toString() ?? "Execution failed. Please try again."),
         };
       }
     } catch (e) {
@@ -154,7 +163,8 @@ class ApiService {
         return {
           "success": false,
           "is_payment_required": true,
-          "message": "Insufficient wallet balance (\$$_localBalance USD). Top up required.",
+          "message":
+              "Insufficient wallet balance (\$$_localBalance USD). Top up required.",
           "cost": cost,
           "current_balance": _localBalance,
         };
@@ -169,11 +179,14 @@ class ApiService {
 
       String demoAnswer = "";
       if (agentId == "legal-clause-explainer") {
-        demoAnswer = "**Analysis for query: \"$query\"**\n\n* **Core Concept:** This clause outlines legal obligations, risk allocations, and rights associated with your query.\n* **Plain Language Breakdown:** Ensure all terms, timelines, and liabilities are clearly defined before signing.\n\n⚠️ [Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]";
+        demoAnswer =
+            "**Analysis for query: \"$query\"**\n\n* **Core Concept:** This clause outlines legal obligations, risk allocations, and rights associated with your query.\n* **Plain Language Breakdown:** Ensure all terms, timelines, and liabilities are clearly defined before signing.\n\n⚠️ [Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]";
       } else if (agentId == "punjabi-slang-translator") {
-        demoAnswer = "**Translation Analysis for: \"$query\"**\n\n**Direct Meaning:** Regional colloquial expression representing specific cultural context.\n\n**Vibe Breakdown:** Conveys authentic cultural nuances and social mood.";
+        demoAnswer =
+            "**Translation Analysis for: \"$query\"**\n\n**Direct Meaning:** Regional colloquial expression representing specific cultural context.\n\n**Vibe Breakdown:** Conveys authentic cultural nuances and social mood.";
       } else {
-        demoAnswer = "**Symptom Triage Analysis for: \"$query\"**\n\nExplanation: Monitor symptoms closely, ensure adequate hydration and rest, and seek medical attention if symptoms persist or worsen.\n\n⚠️ [Disclaimer: This is for general educational purposes only. Always consult a healthcare professional for medical concerns.]";
+        demoAnswer =
+            "**Symptom Triage Analysis for: \"$query\"**\n\nExplanation: Monitor symptoms closely, ensure adequate hydration and rest, and seek medical attention if symptoms persist or worsen.\n\n⚠️ [Disclaimer: This is for general educational purposes only. Always consult a healthcare professional for medical concerns.]";
       }
 
       return {
@@ -201,11 +214,13 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> searchAgents(String query) async {
     try {
       final url = Uri.parse("$baseUrl/search");
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"query": query, "top_k": 5}),
-      ).timeout(const Duration(seconds: 4));
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"query": query, "top_k": 5}),
+          )
+          .timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
         final List list = jsonDecode(response.body);
         return list.cast<Map<String, dynamic>>();
@@ -217,11 +232,13 @@ class ApiService {
   static Future<bool> rateAgent(int agentId, int stars) async {
     try {
       final url = Uri.parse("$baseUrl/agents/$agentId/rate");
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"stars": stars}),
-      ).timeout(const Duration(seconds: 3));
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"stars": stars}),
+          )
+          .timeout(const Duration(seconds: 3));
       return response.statusCode == 200;
     } catch (_) {}
     return false;
