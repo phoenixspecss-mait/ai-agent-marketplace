@@ -126,6 +126,7 @@ class ApiService {
           "cost": data['cost_usd'],
           "settlement": data['payment_settlement'],
           "remaining_balance": _localBalance,
+          "reasoning_chain": data['reasoning_chain'],
         };
       } else if (response.statusCode == 402) {
         final detail = data['detail'];

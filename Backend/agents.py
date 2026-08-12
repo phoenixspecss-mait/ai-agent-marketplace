@@ -172,10 +172,10 @@ STYLE:
 
 # OpenRouter model selection per specialist agent
 OPENROUTER_MODEL_MAP = {
-    "legal-clause-explainer": os.getenv("OPENROUTER_MODEL_LEGAL", "openai/gpt-oss-20b"),
-    "punjabi-slang-translator": os.getenv("OPENROUTER_MODEL_SLANG", "openai/gpt-oss-20b"),
+    "legal-clause-explainer": os.getenv("OPENROUTER_MODEL_LEGAL", "openrouter/auto"),
+    "punjabi-slang-translator": os.getenv("OPENROUTER_MODEL_SLANG", "openrouter/auto"),
     "symptom-triage-explainer": os.getenv("OPENROUTER_MODEL_TRIAGE", "openrouter/auto"),
-    "career-agent": os.getenv("OPENROUTER_MODEL_CAREER", "openai/gpt-oss-20b"),
+    "career-agent": os.getenv("OPENROUTER_MODEL_CAREER", "openrouter/auto"),
 }
 
 def get_active_llm_provider() -> str:
@@ -236,9 +236,6 @@ def _call_openrouter(model_name: str, system_instruction: str, prompt: str) -> s
         ],
         "temperature": 0.2,
     }
-
-    if model_name == "openai/gpt-oss-20b":
-        payload["reasoning"] = {"enabled": True}
 
     response = requests.post(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -306,6 +303,19 @@ def _get_fallback_response(agent_id: str, query: str) -> str:
             f"1. **Educational Overview:** Provides guidance on symptom tracking and wellness routines.\n"
             f"2. **Red Flags:** Seek emergency medical care immediately for severe chest pain, dyspnea, or acute symptoms.\n\n"
             f"⚠️ [Disclaimer: This is for educational triage purposes only. Consult a healthcare professional for personal medical concerns.]"
+        )
+    elif agent_id == "career-agent":
+        return (
+            f"### 🎓 Academic, STEM & Tech Career Analysis\n\n"
+            f"**Query Focus:** \"{query_clean}\"\n\n"
+            f"1. **Core Problem-Solving & Educational Overview:**\n"
+            f"Addressing STEM inquiries, JEE preparation, calculus integration, software algorithms, or career positioning requires a structured step-by-step methodology.\n\n"
+            f"2. **Strategic Roadmap & Methodologies:**\n"
+            f"* **Integration & Math Strategy:** Focus on substitution techniques (u-sub), integration by parts, reduction formulas, and symmetric definite integral properties (King's Property).\n"
+            f"* **Resume STAR Method:** Format bullet points as **[Action Verb] + [Technical Task] + [Quantified Metric]** (e.g., *'Optimized database queries by 45% using indexed Redis caching'*).\n\n"
+            f"3. **Actionable Next Steps:**\n"
+            f"* Work through 10-15 targeted PYQ problem sets for calculus speed & accuracy.\n"
+            f"* Tailor technical keywords on your resume for ATS screening algorithms."
         )
     return f"**Analysis for:** \"{query_clean}\""
 
