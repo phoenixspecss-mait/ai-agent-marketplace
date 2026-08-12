@@ -781,13 +781,20 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   IconData _getDomainIcon(String? badgeText, String? agentId) {
     final b = (badgeText ?? "").toUpperCase();
     final a = (agentId ?? "").toLowerCase();
-    if (b.contains("MEDICAL") || a.contains("symptom") || a.contains("health")) {
+    if (b.contains("MEDICAL") ||
+        a.contains("symptom") ||
+        a.contains("health")) {
       return Icons.medical_services_outlined;
     }
-    if (b.contains("LINGUISTICS") || a.contains("slang") || a.contains("translate")) {
+    if (b.contains("LINGUISTICS") ||
+        a.contains("slang") ||
+        a.contains("translate")) {
       return Icons.translate_rounded;
     }
-    if (b.contains("STEM") || b.contains("CAREER") || a.contains("career") || a.contains("tech")) {
+    if (b.contains("STEM") ||
+        b.contains("CAREER") ||
+        a.contains("career") ||
+        a.contains("tech")) {
       return Icons.school_outlined;
     }
     return Icons.gavel_rounded;
@@ -797,13 +804,20 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     if (isError) return "Execution Error";
     final b = (badgeText ?? "").toUpperCase();
     final a = (agentId ?? "").toLowerCase();
-    if (b.contains("MEDICAL") || a.contains("symptom") || a.contains("health")) {
+    if (b.contains("MEDICAL") ||
+        a.contains("symptom") ||
+        a.contains("health")) {
       return "Medical Triage Complete";
     }
-    if (b.contains("LINGUISTICS") || a.contains("slang") || a.contains("translate")) {
+    if (b.contains("LINGUISTICS") ||
+        a.contains("slang") ||
+        a.contains("translate")) {
       return "Translation Complete";
     }
-    if (b.contains("STEM") || b.contains("CAREER") || a.contains("career") || a.contains("tech")) {
+    if (b.contains("STEM") ||
+        b.contains("CAREER") ||
+        a.contains("career") ||
+        a.contains("tech")) {
       return "STEM & Career Analysis Complete";
     }
     return "Legal Analysis Complete";
@@ -812,13 +826,15 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   String _cleanMarkdownText(String raw) {
     if (raw.isEmpty) return raw;
     final lines = raw.split('\n');
-    final cleaned = lines.map((l) {
-      final trimmed = l.trimLeft();
-      if (trimmed.startsWith('### ')) return trimmed.substring(4);
-      if (trimmed.startsWith('## ')) return trimmed.substring(3);
-      if (trimmed.startsWith('# ')) return trimmed.substring(2);
-      return l;
-    }).join('\n');
+    final cleaned = lines
+        .map((l) {
+          final trimmed = l.trimLeft();
+          if (trimmed.startsWith('### ')) return trimmed.substring(4);
+          if (trimmed.startsWith('## ')) return trimmed.substring(3);
+          if (trimmed.startsWith('# ')) return trimmed.substring(2);
+          return l;
+        })
+        .join('\n');
     return cleaned.trim();
   }
 
@@ -858,11 +874,20 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("• ", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 12)),
+                  const Text(
+                    "• ",
+                    style: TextStyle(
+                      color: AppTheme.emeraldGreen,
+                      fontSize: 12,
+                    ),
+                  ),
                   Expanded(
                     child: RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF9CA3AF),
+                        ),
                         children: [
                           TextSpan(
                             text: "$title: ",
@@ -961,11 +986,18 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: AppTheme.emeraldGreen, size: 14),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: AppTheme.emeraldGreen,
+                  size: 14,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   msg.settlement!,
-                  style: const TextStyle(color: AppTheme.emeraldGreen, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppTheme.emeraldGreen,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -1314,11 +1346,16 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F3A2E),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: AppTheme.emeraldGreen.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: Text(
                         msg.badgeText!,
@@ -1335,7 +1372,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                 Text(
                   cleanedText,
                   style: TextStyle(
-                    color: msg.isError ? Colors.redAccent.shade100 : Colors.white,
+                    color: msg.isError
+                        ? Colors.redAccent.shade100
+                        : Colors.white,
                     fontSize: 15,
                     height: 1.45,
                   ),
