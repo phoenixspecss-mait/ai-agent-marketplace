@@ -14,27 +14,8 @@ class ApiService {
   };
 
   // Local fallback state in case backend is offline during demo
-  static double _localBalance = 4.82;
-  static final List<Map<String, dynamic>> _localTransactions = [
-    {
-      "agent_id": "Rental Clause Explainer",
-      "amount": 0.004,
-      "date": "Today",
-      "is_deduction": true,
-    },
-    {
-      "agent_id": "Hindi Slang Translator",
-      "amount": 0.004,
-      "date": "Yesterday",
-      "is_deduction": true,
-    },
-    {
-      "agent_id": "Symptom Triage",
-      "amount": 0.008,
-      "date": "Oct 24",
-      "is_deduction": true,
-    },
-  ];
+  static double _localBalance = 5.00;
+  static final List<Map<String, dynamic>> _localTransactions = [];
 
   static List<Map<String, dynamic>> get localTransactions => _localTransactions;
 
