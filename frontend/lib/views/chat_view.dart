@@ -72,17 +72,17 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _sendMessage([String? presetQuery, String? agentIdOverride]) async {
+  Future<void> _sendMessage([
+    String? presetQuery,
+    String? agentIdOverride,
+  ]) async {
     final text = presetQuery ?? _queryController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
     _queryController.clear();
 
     setState(() {
-      _messages.add(MessageItem(
-        sender: 'user',
-        text: text,
-      ));
+      _messages.add(MessageItem(sender: 'user', text: text));
       _isLoading = true;
     });
     _scrollToBottom();
@@ -140,6 +140,23 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           lower.contains("lease") ||
           lower.contains("waiver")) {
         agentId = "legal-clause-explainer";
+      } else if (lower.contains("jee") ||
+          lower.contains("math") ||
+          lower.contains("calculus") ||
+          lower.contains("integration") ||
+          lower.contains("physics") ||
+          lower.contains("chemistry") ||
+          lower.contains("exam") ||
+          lower.contains("study") ||
+          lower.contains("code") ||
+          lower.contains("tech") ||
+          lower.contains("resume") ||
+          lower.contains("career") ||
+          lower.contains("job") ||
+          lower.contains("interview") ||
+          lower.contains("prep") ||
+          lower.contains("algorithm")) {
+        agentId = "career-agent";
       } else {
         try {
           final searchResults = await ApiService.searchAgents(text);
@@ -149,14 +166,18 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             if (score > 0.1) {
               final topAgent = topMatch['agent'];
               if (topAgent != null && topAgent is Map) {
-                agentId = (topAgent['endpoint_or_identifier'] ?? topAgent['category'] ?? "").toString();
+                agentId =
+                    (topAgent['endpoint_or_identifier'] ??
+                            topAgent['category'] ??
+                            "")
+                        .toString();
               }
             }
           }
         } catch (_) {}
 
         if (agentId.isEmpty) {
-          agentId = "symptom-triage-explainer";
+          agentId = "career-agent";
         }
       }
     }
@@ -174,28 +195,43 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       _isLoading = false;
       if (response['success'] == true) {
         String badge = "VERIFIED LEGAL";
-        if (agentId.contains("slang") || agentId.contains("translator") || agentId.contains("linguis")) {
+        if (agentId.contains("slang") ||
+            agentId.contains("translator") ||
+            agentId.contains("linguis")) {
           badge = "VERIFIED LINGUISTICS";
-        } else if (agentId.contains("symptom") || agentId.contains("medical") || agentId.contains("triage") || agentId.contains("health")) {
+        } else if (agentId.contains("symptom") ||
+            agentId.contains("medical") ||
+            agentId.contains("triage") ||
+            agentId.contains("health")) {
           badge = "VERIFIED MEDICAL";
+        } else if (agentId.contains("career") ||
+            agentId.contains("tech") ||
+            agentId.contains("stem")) {
+          badge = "VERIFIED STEM & CAREER";
         }
 
-        _messages.add(MessageItem(
-          sender: 'ai',
-          text: response['result'],
-          agentId: agentId,
-          badgeText: badge,
-          settlement: response['settlement'],
-        ));
+        _messages.add(
+          MessageItem(
+            sender: 'ai',
+            text: response['result'],
+            agentId: agentId,
+            badgeText: badge,
+            settlement: response['settlement'],
+          ),
+        );
         if (response['remaining_balance'] != null) {
-          widget.onBalanceUpdated((response['remaining_balance'] as num).toDouble());
+          widget.onBalanceUpdated(
+            (response['remaining_balance'] as num).toDouble(),
+          );
         }
       } else {
-        _messages.add(MessageItem(
-          sender: 'ai',
-          text: response['message'] ?? "Error processing request.",
-          isError: true,
-        ));
+        _messages.add(
+          MessageItem(
+            sender: 'ai',
+            text: response['message'] ?? "Error processing request.",
+            isError: true,
+          ),
+        );
       }
     });
     _scrollToBottom();
@@ -220,7 +256,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 350),
-                child: isNewChat ? _buildHomeHeroView() : _buildActiveChatList(),
+                child: isNewChat
+                    ? _buildHomeHeroView()
+                    : _buildActiveChatList(),
               ),
             ),
             _buildBottomInputArea(),
@@ -243,7 +281,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           child: Column(
             children: [
               Expanded(
-                child: isNewChat ? _buildDesktopNewChatLanding() : _buildDesktopActiveChatList(),
+                child: isNewChat
+                    ? _buildDesktopNewChatLanding()
+                    : _buildDesktopActiveChatList(),
               ),
               _buildDesktopBottomInputArea(isNewChat),
             ],
@@ -256,7 +296,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             width: 320,
             decoration: const BoxDecoration(
               color: Color(0xFF0C1412),
-              border: Border(left: BorderSide(color: Color(0xFF1E2C29), width: 1)),
+              border: Border(
+                left: BorderSide(color: Color(0xFF1E2C29), width: 1),
+              ),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -274,16 +316,25 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
 
                 // Verified Source Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F3A2E),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: AppTheme.emeraldGreen.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
-                      Icon(Icons.check_circle_outline, color: AppTheme.emeraldGreen, size: 14),
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: AppTheme.emeraldGreen,
+                        size: 14,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         "VERIFIED SOURCE",
@@ -302,14 +353,16 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                 // Reference Insight Card 1 (CA Senate Bill 699)
                 _buildInsightCard(
                   title: "CA Senate Bill 699",
-                  subtitle: "An act to add Section 16600.5 to the Business and Professions Code relating to contracts. Voids non-competes.",
+                  subtitle:
+                      "An act to add Section 16600.5 to the Business and Professions Code relating to contracts. Voids non-competes.",
                 ),
                 const SizedBox(height: 14),
 
                 // Reference Insight Card 2 (Edwards v. Arthur Andersen LLP)
                 _buildInsightCard(
                   title: "Edwards v. Arthur Andersen LLP",
-                  subtitle: "Key California Supreme Court ruling affirming the state's strong public policy against non-compete clauses.",
+                  subtitle:
+                      "Key California Supreme Court ruling affirming the state's strong public policy against non-compete clauses.",
                 ),
               ],
             ),
@@ -342,7 +395,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              const Icon(Icons.open_in_new_rounded, color: Color(0xFF9CA3AF), size: 16),
+              const Icon(
+                Icons.open_in_new_rounded,
+                color: Color(0xFF9CA3AF),
+                size: 16,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -372,16 +429,24 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             children: [
               // Pill Badge: • Network Online (Image 4)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF13241F),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppTheme.emeraldGreen.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    CircleAvatar(radius: 4, backgroundColor: AppTheme.emeraldGreen),
+                    CircleAvatar(
+                      radius: 4,
+                      backgroundColor: AppTheme.emeraldGreen,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       "Network Online",
@@ -440,13 +505,16 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   color: const Color(0xFF131D1A),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF23322E), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFF23322E),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -457,8 +525,12 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                       maxLines: 4,
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: const InputDecoration(
-                        hintText: "Describe your legal query, paste a contract snippet, or ask about regulatory compliance...",
-                        hintStyle: TextStyle(color: Color(0xFF6B7280), fontSize: 15),
+                        hintText:
+                            "Describe your legal query, paste a contract snippet, or ask about regulatory compliance...",
+                        hintStyle: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 15,
+                        ),
                         border: InputBorder.none,
                       ),
                       onSubmitted: (_) => _sendMessage(),
@@ -467,11 +539,19 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.attach_file, color: Color(0xFF9CA3AF), size: 22),
+                          icon: const Icon(
+                            Icons.attach_file,
+                            color: Color(0xFF9CA3AF),
+                            size: 22,
+                          ),
                           onPressed: () {},
                         ),
                         IconButton(
-                          icon: const Icon(Icons.tune_rounded, color: Color(0xFF9CA3AF), size: 22),
+                          icon: const Icon(
+                            Icons.tune_rounded,
+                            color: Color(0xFF9CA3AF),
+                            size: 22,
+                          ),
                           onPressed: () {},
                         ),
                         const Spacer(),
@@ -482,15 +562,23 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.emeraldGreen,
                             foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 0,
                           ),
                           child: Row(
                             children: const [
                               Text(
                                 "Analyze",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
                               SizedBox(width: 8),
                               Icon(Icons.send_rounded, size: 16),
@@ -582,7 +670,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -619,7 +711,10 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             children: const [
               Icon(Icons.search, color: Color(0xFF9CA3AF), size: 16),
               SizedBox(width: 8),
-              Text("Searching precedent database...", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
+              Text(
+                "Searching precedent database...",
+                style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -627,7 +722,14 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             children: const [
               Icon(Icons.sync, color: AppTheme.emeraldGreen, size: 16),
               SizedBox(width: 8),
-              Text("Synthesizing legal risk assessment...", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 13, fontWeight: FontWeight.bold)),
+              Text(
+                "Synthesizing legal risk assessment...",
+                style: TextStyle(
+                  color: AppTheme.emeraldGreen,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],
@@ -649,7 +751,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
         ),
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.45),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            height: 1.45,
+          ),
         ),
       ),
     );
@@ -663,7 +769,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
         color: const Color(0xFF131D1A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: msg.isError ? Colors.redAccent.withValues(alpha: 0.4) : AppTheme.emeraldGreen.withValues(alpha: 0.3),
+          color: msg.isError
+              ? Colors.redAccent.withValues(alpha: 0.4)
+              : AppTheme.emeraldGreen.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -686,15 +794,24 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
               const Spacer(),
               if (msg.badgeText != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F3A2E),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: AppTheme.emeraldGreen.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Text(
                     msg.badgeText!,
-                    style: const TextStyle(color: AppTheme.emeraldGreen, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: AppTheme.emeraldGreen,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
             ],
@@ -735,7 +852,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   SizedBox(height: 8),
                   Text(
                     "• Ensure all key obligations, parameters, and provisions are reviewed prior to agreement execution.\n• Contact licensed professionals for binding legal/medical consultations.",
-                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -773,7 +894,8 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                 controller: _queryController,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
                 decoration: const InputDecoration(
-                  hintText: "Ask a follow-up question or upload another document...",
+                  hintText:
+                      "Ask a follow-up question or upload another document...",
                   hintStyle: TextStyle(color: Color(0xFF6B7280)),
                   border: InputBorder.none,
                 ),
@@ -787,7 +909,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   color: AppTheme.emeraldGreen,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_upward_rounded, color: Colors.black, size: 18),
+                child: const Icon(
+                  Icons.arrow_upward_rounded,
+                  color: Colors.black,
+                  size: 18,
+                ),
               ),
               onPressed: () => _sendMessage(),
             ),
@@ -815,13 +941,16 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: const Color(0xFF1B2925),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.4), width: 1.5),
+                border: Border.all(
+                  color: AppTheme.emeraldGreen.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.emeraldGreen.withValues(alpha: 0.25),
                     blurRadius: 16,
                     spreadRadius: 2,
-                  )
+                  ),
                 ],
               ),
               child: const Icon(
@@ -964,7 +1093,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
         }
 
         final msg = _messages[index];
-        return msg.sender == 'user' ? _buildUserBubble(msg.text) : _buildAiBubble(msg);
+        return msg.sender == 'user'
+            ? _buildUserBubble(msg.text)
+            : _buildAiBubble(msg);
       },
     );
   }
@@ -1022,7 +1153,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.82,
+            ),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: const Color(0xFF1D2A27),
@@ -1031,7 +1164,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             ),
             child: Text(
               text,
-              style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -1049,10 +1186,14 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: msg.isError ? const Color(0xFF331616) : const Color(0xFF131D1A),
+              color: msg.isError
+                  ? const Color(0xFF331616)
+                  : const Color(0xFF131D1A),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: msg.isError ? Colors.redAccent.withValues(alpha: 0.4) : const Color(0xFF23322E),
+                color: msg.isError
+                    ? Colors.redAccent.withValues(alpha: 0.4)
+                    : const Color(0xFF23322E),
               ),
             ),
             child: Text(

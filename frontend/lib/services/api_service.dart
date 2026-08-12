@@ -218,6 +218,18 @@ class ApiService {
             "Examines the social origin, youth pop-culture references, and regional dialect nuances embedded within the expression.\n\n"
             "#### 3. Conversational Usage & Vibe Analysis\n"
             "Describes the informal social setting, tone of excitement or camaraderie, and appropriate situational usage.";
+      } else if (agentId.contains("career") || agentId.contains("tech") || agentId.contains("stem")) {
+        demoAnswer =
+            "### 🎓 Academic, STEM & Tech Career Guidance\n\n"
+            "**Consultation Topic:** \"$query\"\n\n"
+            "#### 1. Core Problem-Solving & Educational Overview\n"
+            "Addressing STEM inquiries, JEE preparation, calculus integration, software algorithms, or career positioning requires a structured approach.\n\n"
+            "#### 2. Strategic Roadmap & Methodologies\n"
+            "* **Integration & Math Strategy:** Focus on substitution techniques (u-sub), integration by parts, reduction formulas, and definite integral properties (King's Property).\n"
+            "* **Preparation Roadmap:** Work through previous year problem sets to spot reduction patterns and avoid sign errors under timed test conditions.\n\n"
+            "#### 3. Actionable Next Steps\n"
+            "* Solve 10-15 targeted problem sets focusing on the core integration identities.\n"
+            "* Review boundary conditions and special limit evaluations.";
       } else {
         demoAnswer =
             "### ⚖️ Executive Legal & Contract Clause Analysis\n\n"
