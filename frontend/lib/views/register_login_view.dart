@@ -69,11 +69,20 @@ class _RegisterLoginViewState extends State<RegisterLoginView> {
         Navigator.of(context).pushNamedAndRemoveUntil('/home/', (_) => false);
       }
     } on GoogleSignInCancelledException {
-      // User cancelled Google sign-in dialog
+      // User cancelled Google sign-in dialog - no action needed
     } catch (e) {
       debugPrint("Google Sign-In failed: $e");
       if (mounted) {
-        _showSnack("Google Sign-In failed. Please try again.", Colors.redAccent);
+        final cleanMsg = e
+            .toString()
+            .replaceAll('Exception:', '')
+            .replaceAll('FirebaseAuthException', '')
+            .replaceAll('GenericAuthException', '')
+            .trim();
+        _showSnack(
+          cleanMsg.isNotEmpty ? "Google Sign-In: $cleanMsg" : "Google Sign-In failed. Please try again.",
+          Colors.redAccent,
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

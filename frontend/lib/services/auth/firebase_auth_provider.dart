@@ -226,19 +226,21 @@ class FirebaseAuthProvider implements AuthProvider {
           userCredential =
               await FirebaseAuth.instance.signInWithPopup(googleProvider);
         } catch (popupError) {
+          final errStr = popupError.toString().toLowerCase();
           debugPrint("signInWithPopup error: $popupError");
-          if (popupError is FirebaseAuthException) {
-            if (popupError.code == 'popup-closed-by-user' ||
-                popupError.code == 'cancelled-popup-request') {
-              throw GoogleSignInCancelledException();
-            }
+          if (errStr.contains('popup-closed-by-user') ||
+              errStr.contains('cancelled-popup-request') ||
+              errStr.contains('user-cancelled') ||
+              errStr.contains('popup_closed_by_user')) {
+            throw GoogleSignInCancelledException();
           }
-          await FirebaseAuth.instance.signInWithRedirect(googleProvider);
-          final user = FirebaseAuth.instance.currentUser;
-          if (user != null) {
-            return AuthUser.fromFirebase(user);
+          if (errStr.contains('popup-blocked')) {
+            await FirebaseAuth.instance.signInWithRedirect(googleProvider);
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) return AuthUser.fromFirebase(user);
+            throw GoogleSignInCancelledException();
           }
-          throw popupError;
+          rethrow;
         }
 
         final user = userCredential.user ?? FirebaseAuth.instance.currentUser;
@@ -272,7 +274,7 @@ class FirebaseAuthProvider implements AuthProvider {
     } catch (e) {
       debugPrint("GOOGLE SIGN IN ERROR DETAILS: $e");
       if (e is GoogleSignInCancelledException) rethrow;
-      throw GenericAuthException();
+      rethrow;
     }
   }
 
