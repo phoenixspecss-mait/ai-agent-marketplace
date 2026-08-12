@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
+import 'package:expert_ai/services/database/database_service.dart';
 
 class ApiService {
   // Live deployed backend on Render
@@ -74,6 +75,13 @@ class ApiService {
           "date": "Just now",
           "is_deduction": false,
         });
+        DatabaseService.instance().recordActivity(
+          userId: userId,
+          agentName: "Wallet Top Up",
+          query: "Added \$$amount USD to wallet",
+          amount: amount,
+          isDeduction: false,
+        );
         return _localBalance;
       }
     } catch (_) {}
@@ -84,6 +92,13 @@ class ApiService {
       "date": "Just now",
       "is_deduction": false,
     });
+    DatabaseService.instance().recordActivity(
+      userId: userId,
+      agentName: "Wallet Top Up",
+      query: "Added \$$amount USD to wallet",
+      amount: amount,
+      isDeduction: false,
+    );
     return _localBalance;
   }
 
@@ -109,13 +124,21 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        final costVal = (data['cost_usd'] as num).toDouble();
         _localBalance = (data['remaining_balance_usd'] as num).toDouble();
         _localTransactions.insert(0, {
           "agent_id": agentId,
-          "amount": (data['cost_usd'] as num).toDouble(),
+          "amount": costVal,
           "date": "Today",
           "is_deduction": true,
         });
+        DatabaseService.instance().recordActivity(
+          userId: userId,
+          agentName: agentId,
+          query: query,
+          amount: costVal,
+          isDeduction: true,
+        );
         return {
           "success": true,
           "result": data['result'],
@@ -175,6 +198,13 @@ class ApiService {
         "date": "Today",
         "is_deduction": true,
       });
+      DatabaseService.instance().recordActivity(
+        userId: userId,
+        agentName: agentId,
+        query: query,
+        amount: cost,
+        isDeduction: true,
+      );
 
       String demoAnswer = "";
       if (agentId == "legal-clause-explainer") {

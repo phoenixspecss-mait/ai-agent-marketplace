@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:expert_ai/services/database/database_history_item.dart';
+import 'package:expert_ai/services/database/database_service.dart';
 import 'package:expert_ai/theme/app_theme.dart';
 
 class HistoryView extends StatefulWidget {
@@ -13,6 +16,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
   late AnimationController _fabPulseController;
   late Animation<double> _fabPulseAnimation;
 
+  late Future<List<DatabaseHistoryItem>> _historyFuture;
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +29,15 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     _fabPulseAnimation = Tween<double>(begin: 1.0, end: 1.06).animate(
       CurvedAnimation(parent: _fabPulseController, curve: Curves.easeInOut),
     );
+
+    _refreshHistory();
+  }
+
+  void _refreshHistory() {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? "demo_user_01";
+    setState(() {
+      _historyFuture = DatabaseService.instance().fetchHistory(userId);
+    });
   }
 
   @override
@@ -34,44 +48,6 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> historyItems = [
-      {
-        "agent": "Linguistics AI",
-        "time": "2h ago",
-        "query": "\"Translate this Bhojpuri folk so...\"",
-        "icon": Icons.translate_rounded,
-        "color": const Color(0xFF00B894),
-      },
-      {
-        "agent": "Legal Concierge",
-        "time": "Yesterday",
-        "query": "\"Review this freelance contrac...\"",
-        "icon": Icons.gavel_rounded,
-        "color": const Color(0xFF3A26B5),
-      },
-      {
-        "agent": "Medical Triage AI",
-        "time": "Oct 12",
-        "query": "\"What are the typical side effe...\"",
-        "icon": Icons.medical_services_rounded,
-        "color": const Color(0xFFE17055),
-      },
-      {
-        "agent": "Code Architect",
-        "time": "Oct 10",
-        "query": "\"Help me refactor this React c...\"",
-        "icon": Icons.code_rounded,
-        "color": const Color(0xFF0984E3),
-      },
-      {
-        "agent": "Tax Advisor",
-        "time": "Sep 28",
-        "query": "\"Deductible expenses for a ho...\"",
-        "icon": Icons.account_balance_rounded,
-        "color": const Color(0xFFFDCB6E),
-      },
-    ];
-
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
@@ -82,102 +58,184 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "History",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "History",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: AppTheme.emeraldGreen),
+                        onPressed: _refreshHistory,
+                        tooltip: "Refresh History",
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
 
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: historyItems.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = historyItems[index];
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 400 + (index * 100)),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, val, child) {
-                            return Opacity(
-                              opacity: val,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - val)),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF131D1A),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFF23322E), width: 1),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    child: FutureBuilder<List<DatabaseHistoryItem>>(
+                      future: _historyFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(color: AppTheme.emeraldGreen),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: (item['color'] as Color).withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    item['icon'] as IconData,
-                                    color: item['color'] as Color,
-                                    size: 24,
-                                  ),
+                                const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "Failed to load activity history.",
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                                 ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
+                                TextButton(
+                                  onPressed: _refreshHistory,
+                                  child: const Text("Retry", style: TextStyle(color: AppTheme.emeraldGreen)),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        final historyItems = snapshot.data ?? [];
+
+                        if (historyItems.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.history_toggle_off_rounded, color: Colors.white.withValues(alpha: 0.3), size: 54),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "No past agent executions found.",
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return RefreshIndicator(
+                          color: AppTheme.emeraldGreen,
+                          backgroundColor: const Color(0xFF131D1A),
+                          onRefresh: () async {
+                            _refreshHistory();
+                            await _historyFuture;
+                          },
+                          child: ListView.separated(
+                            itemCount: historyItems.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final item = historyItems[index];
+                              return TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: Duration(milliseconds: 300 + (index * 60)),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, val, child) {
+                                  return Opacity(
+                                    opacity: val,
+                                    child: Transform.translate(
+                                      offset: Offset(0, 15 * (1 - val)),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF131D1A),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: const Color(0xFF23322E), width: 1),
+                                  ),
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.verified,
-                                            color: AppTheme.emeraldGreen,
-                                            size: 16,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            item['agent'],
-                                            style: const TextStyle(
-                                              color: AppTheme.emeraldGreen,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Text(
-                                            item['time'],
-                                            style: const TextStyle(
-                                              color: Color(0xFF9CA3AF),
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: item.color.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          item.icon,
+                                          color: item.color,
+                                          size: 24,
+                                        ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        item['query'],
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.verified,
+                                                  color: AppTheme.emeraldGreen,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  item.agentName,
+                                                  style: const TextStyle(
+                                                    color: AppTheme.emeraldGreen,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                  ),
+                                                ),
+                                                const Spacer(),
+                                                Text(
+                                                  item.timeAgo,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF9CA3AF),
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              item.query,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            if (item.amount > 0) ...[
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                item.isDeduction
+                                                    ? "-\$${item.amount.toStringAsFixed(4)} USD"
+                                                    : "+\$${item.amount.toStringAsFixed(2)} USD",
+                                                style: TextStyle(
+                                                  color: item.isDeduction
+                                                      ? Colors.white38
+                                                      : AppTheme.emeraldGreen,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         );
                       },
