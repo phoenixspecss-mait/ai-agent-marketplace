@@ -216,15 +216,49 @@ class FirebaseAuthProvider implements AuthProvider {
   Future<AuthUser> signInWithGoogle() async {
     try {
       if (kIsWeb) {
+        // Attempt GoogleSignIn with explicit clientId for GIS on Web
+        try {
+          final GoogleSignIn googleSignIn = GoogleSignIn(
+            clientId:
+                '845900841870-u70fenbiiu6qrcom0f0os0lcfpv7m28s.apps.googleusercontent.com',
+            scopes: ['email', 'profile'],
+          );
+          final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+          if (googleUser != null) {
+            final GoogleSignInAuthentication googleAuth =
+                await googleUser.authentication;
+            final credential = GoogleAuthProvider.credential(
+              accessToken: googleAuth.accessToken,
+              idToken: googleAuth.idToken,
+            );
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              return AuthUser.fromFirebase(user);
+            }
+          }
+        } catch (webGsiError) {
+          debugPrint("GoogleSignIn Web error, falling back to signInWithPopup: $webGsiError");
+        }
+
+        // Firebase Auth popup / redirect fallback
         final GoogleAuthProvider googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
+        googleProvider.addScope('profile');
         googleProvider.setCustomParameters({'prompt': 'select_account'});
 
         UserCredential userCredential;
         try {
-          userCredential = await FirebaseAuth.instance.signInWithPopup(googleProvider);
+          userCredential =
+              await FirebaseAuth.instance.signInWithPopup(googleProvider);
         } catch (popupError) {
-          debugPrint("signInWithPopup error, trying signInWithRedirect: $popupError");
+          debugPrint("signInWithPopup error: $popupError");
+          if (popupError is FirebaseAuthException) {
+            if (popupError.code == 'popup-closed-by-user' ||
+                popupError.code == 'cancelled-popup-request') {
+              throw GoogleSignInCancelledException();
+            }
+          }
           await FirebaseAuth.instance.signInWithRedirect(googleProvider);
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
@@ -239,7 +273,7 @@ class FirebaseAuthProvider implements AuthProvider {
         return AuthUser.fromFirebase(user);
       } else {
         final GoogleSignInAccount? googleUser = await GoogleSignIn(
-          scopes: ['email'],
+          scopes: ['email', 'profile'],
           serverClientId:
               '845900841870-u70fenbiiu6qrcom0f0os0lcfpv7m28s.apps.googleusercontent.com',
         ).signIn();
