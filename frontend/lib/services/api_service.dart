@@ -5,7 +5,7 @@ import 'package:expert_ai/services/database/database_service.dart';
 
 class ApiService {
   // Live deployed backend on Render
-  static String get baseUrl => "https://ai-agent-marketplace-sa1v.onrender.com";
+  static String get baseUrl => "https://ai-agent-marketplace-1-tkgx.onrender.com";
 
   static Map<String, double> agentCosts = {
     "legal-clause-explainer": 0.005,
