@@ -761,7 +761,55 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     );
   }
 
+  IconData _getDomainIcon(String? badgeText, String? agentId) {
+    final b = (badgeText ?? "").toUpperCase();
+    final a = (agentId ?? "").toLowerCase();
+    if (b.contains("MEDICAL") || a.contains("symptom") || a.contains("health")) {
+      return Icons.medical_services_outlined;
+    }
+    if (b.contains("LINGUISTICS") || a.contains("slang") || a.contains("translate")) {
+      return Icons.translate_rounded;
+    }
+    if (b.contains("STEM") || b.contains("CAREER") || a.contains("career") || a.contains("tech")) {
+      return Icons.school_outlined;
+    }
+    return Icons.gavel_rounded;
+  }
+
+  String _getDomainTitle(String? badgeText, String? agentId, bool isError) {
+    if (isError) return "Execution Error";
+    final b = (badgeText ?? "").toUpperCase();
+    final a = (agentId ?? "").toLowerCase();
+    if (b.contains("MEDICAL") || a.contains("symptom") || a.contains("health")) {
+      return "Medical Triage Complete";
+    }
+    if (b.contains("LINGUISTICS") || a.contains("slang") || a.contains("translate")) {
+      return "Translation Complete";
+    }
+    if (b.contains("STEM") || b.contains("CAREER") || a.contains("career") || a.contains("tech")) {
+      return "STEM & Career Analysis Complete";
+    }
+    return "Legal Analysis Complete";
+  }
+
+  String _cleanMarkdownText(String raw) {
+    if (raw.isEmpty) return raw;
+    final lines = raw.split('\n');
+    final cleaned = lines.map((l) {
+      final trimmed = l.trimLeft();
+      if (trimmed.startsWith('### ')) return trimmed.substring(4);
+      if (trimmed.startsWith('## ')) return trimmed.substring(3);
+      if (trimmed.startsWith('# ')) return trimmed.substring(2);
+      return l;
+    }).join('\n');
+    return cleaned.trim();
+  }
+
   Widget _buildDesktopAiBubble(MessageItem msg) {
+    final icon = _getDomainIcon(msg.badgeText, msg.agentId);
+    final title = _getDomainTitle(msg.badgeText, msg.agentId, msg.isError);
+    final cleanedText = _cleanMarkdownText(msg.text);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(24),
@@ -778,13 +826,13 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Card Label (Image 1: Legal Analysis Complete)
+          // Header Card Label with Domain Icon & Dynamic Title
           Row(
             children: [
-              const Icon(Icons.balance, color: AppTheme.emeraldGreen, size: 20),
+              Icon(icon, color: AppTheme.emeraldGreen, size: 20),
               const SizedBox(width: 10),
               Text(
-                msg.isError ? "Execution Error" : "Analysis Complete",
+                title,
                 style: const TextStyle(
                   color: AppTheme.emeraldGreen,
                   fontSize: 17,
@@ -795,7 +843,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
               if (msg.badgeText != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
@@ -819,48 +867,26 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           const SizedBox(height: 16),
 
           Text(
-            msg.text,
+            cleanedText,
             style: TextStyle(
               color: msg.isError ? Colors.redAccent.shade100 : Colors.white,
               fontSize: 15,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Immediate Risks / Actionable Advice Sub-Box (Image 1)
-          if (!msg.isError)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D1614),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF1D2C28)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Immediate Takeaways & Advice",
-                    style: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "• Ensure all key obligations, parameters, and provisions are reviewed prior to agreement execution.\n• Contact licensed professionals for binding legal/medical consultations.",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
+          if (msg.settlement != null) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: AppTheme.emeraldGreen, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  msg.settlement!,
+                  style: const TextStyle(color: AppTheme.emeraldGreen, fontSize: 12),
+                ),
+              ],
             ),
+          ],
         ],
       ),
     );
@@ -1177,6 +1203,8 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   }
 
   Widget _buildAiBubble(MessageItem msg) {
+    final cleanedText = _cleanMarkdownText(msg.text);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Column(
@@ -1196,13 +1224,40 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                     : const Color(0xFF23322E),
               ),
             ),
-            child: Text(
-              msg.text,
-              style: TextStyle(
-                color: msg.isError ? Colors.redAccent.shade100 : Colors.white,
-                fontSize: 15,
-                height: 1.45,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (msg.badgeText != null) ...[
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F3A2E),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppTheme.emeraldGreen.withValues(alpha: 0.5)),
+                      ),
+                      child: Text(
+                        msg.badgeText!,
+                        style: const TextStyle(
+                          color: AppTheme.emeraldGreen,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                Text(
+                  cleanedText,
+                  style: TextStyle(
+                    color: msg.isError ? Colors.redAccent.shade100 : Colors.white,
+                    fontSize: 15,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
