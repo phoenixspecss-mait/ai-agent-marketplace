@@ -90,25 +90,73 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     // Dynamically assign agent according to user query topic
     String agentId = agentIdOverride ?? "";
     if (agentId.isEmpty) {
-      try {
-        final searchResults = await ApiService.searchAgents(text);
-        if (searchResults.isNotEmpty) {
-          final topAgent = searchResults.first['agent'];
-          if (topAgent != null && topAgent is Map) {
-            agentId = (topAgent['endpoint_or_identifier'] ?? topAgent['category'] ?? "").toString();
+      final lower = text.toLowerCase();
+      // Inspect high-priority domain keywords first
+      if (lower.contains("cardiac") ||
+          lower.contains("heart") ||
+          lower.contains("artery") ||
+          lower.contains("arteries") ||
+          lower.contains("diet") ||
+          lower.contains("routine") ||
+          lower.contains("blood") ||
+          lower.contains("symptom") ||
+          lower.contains("pain") ||
+          lower.contains("fever") ||
+          lower.contains("hurt") ||
+          lower.contains("headache") ||
+          lower.contains("medical") ||
+          lower.contains("sprain") ||
+          lower.contains("doctor") ||
+          lower.contains("health") ||
+          lower.contains("triage") ||
+          lower.contains("disease") ||
+          lower.contains("illness") ||
+          lower.contains("condition") ||
+          lower.contains("chest") ||
+          lower.contains("advice") ||
+          lower.contains("treatment") ||
+          lower.contains("block")) {
+        agentId = "symptom-triage-explainer";
+      } else if (lower.contains("slang") ||
+          lower.contains("bhojpuri") ||
+          lower.contains("punjabi") ||
+          lower.contains("translate") ||
+          lower.contains("hindi") ||
+          lower.contains("meaning") ||
+          lower.contains("vibe") ||
+          lower.contains("idiom") ||
+          lower.contains("colloquial")) {
+        agentId = "punjabi-slang-translator";
+      } else if (lower.contains("contract") ||
+          lower.contains("clause") ||
+          lower.contains("legal") ||
+          lower.contains("agreement") ||
+          lower.contains("law") ||
+          lower.contains("court") ||
+          lower.contains("arbitration") ||
+          lower.contains("liability") ||
+          lower.contains("nda") ||
+          lower.contains("tenant") ||
+          lower.contains("lease") ||
+          lower.contains("waiver")) {
+        agentId = "legal-clause-explainer";
+      } else {
+        try {
+          final searchResults = await ApiService.searchAgents(text);
+          if (searchResults.isNotEmpty) {
+            final topMatch = searchResults.first;
+            final score = (topMatch['match_score'] as num?)?.toDouble() ?? 0.0;
+            if (score > 0.1) {
+              final topAgent = topMatch['agent'];
+              if (topAgent != null && topAgent is Map) {
+                agentId = (topAgent['endpoint_or_identifier'] ?? topAgent['category'] ?? "").toString();
+              }
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
 
-      // Fallback topic classifier if search is offline or unindexed
-      if (agentId.isEmpty) {
-        final lower = text.toLowerCase();
-        if (lower.contains("slang") || lower.contains("bhojpuri") || lower.contains("punjabi") || lower.contains("translate") || lower.contains("hindi") || lower.contains("meaning") || lower.contains("vibe") || lower.contains("idiom")) {
-          agentId = "punjabi-slang-translator";
-        } else if (lower.contains("symptom") || lower.contains("pain") || lower.contains("fever") || lower.contains("hurt") || lower.contains("headache") || lower.contains("medical") || lower.contains("sprain") || lower.contains("doctor") || lower.contains("health") || lower.contains("triage")) {
+        if (agentId.isEmpty) {
           agentId = "symptom-triage-explainer";
-        } else {
-          agentId = "legal-clause-explainer";
         }
       }
     }
@@ -126,8 +174,11 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       _isLoading = false;
       if (response['success'] == true) {
         String badge = "VERIFIED LEGAL";
-        if (agentId.contains("slang")) badge = "VERIFIED LINGUISTICS";
-        if (agentId.contains("symptom")) badge = "VERIFIED MEDICAL";
+        if (agentId.contains("slang") || agentId.contains("translator") || agentId.contains("linguis")) {
+          badge = "VERIFIED LINGUISTICS";
+        } else if (agentId.contains("symptom") || agentId.contains("medical") || agentId.contains("triage") || agentId.contains("health")) {
+          badge = "VERIFIED MEDICAL";
+        }
 
         _messages.add(MessageItem(
           sender: 'ai',

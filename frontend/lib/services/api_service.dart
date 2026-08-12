@@ -188,15 +188,15 @@ class ApiService {
       );
 
       String demoAnswer = "";
-      if (agentId == "legal-clause-explainer") {
+      if (agentId.contains("symptom") || agentId.contains("triage") || agentId.contains("health") || agentId.contains("medical")) {
         demoAnswer =
-            "**Analysis for query: \"$query\"**\n\n* **Core Concept:** This clause outlines legal obligations, risk allocations, and rights associated with your query.\n* **Plain Language Breakdown:** Ensure all terms, timelines, and liabilities are clearly defined before signing.\n\n⚠️ [Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]";
-      } else if (agentId == "punjabi-slang-translator") {
+            "**Medical Triage & Health Guidance**\n\n* **Query Focus:** \"$query\"\n\n* **Primary Recommendations:**\n  1. **Diet & Routine Adjustments:** Emphasize a heart-healthy diet low in sodium and saturated fats, manage stress, and maintain physician-approved physical activity.\n  2. **Monitoring & Risk Factors:** Track symptoms, blood pressure, and cholesterol levels closely.\n  3. **Warning Indicators:** Seek emergency medical care immediately if you experience severe chest discomfort, shortness of breath, or pain radiating to the arm/jaw.\n\n⚠️ *[Disclaimer: This explanation is for educational triage purposes only and does not replace direct consultation with a licensed medical professional.]*";
+      } else if (agentId.contains("slang") || agentId.contains("punjabi") || agentId.contains("translate") || agentId.contains("linguis")) {
         demoAnswer =
-            "**Translation Analysis for: \"$query\"**\n\n**Direct Meaning:** Regional colloquial expression representing specific cultural context.\n\n**Vibe Breakdown:** Conveys authentic cultural nuances and social mood.";
+            "**Linguistic & Regional Slang Translation**\n\n* **Query Analyzed:** \"$query\"\n* **Direct Meaning:** Regional colloquial expression translating informal conversational vibe.\n* **Cultural Context:** Captures social mood and native dialect nuances.";
       } else {
         demoAnswer =
-            "**Symptom Triage Analysis for: \"$query\"**\n\nExplanation: Monitor symptoms closely, ensure adequate hydration and rest, and seek medical attention if symptoms persist or worsen.\n\n⚠️ [Disclaimer: This is for general educational purposes only. Always consult a healthcare professional for medical concerns.]";
+            "**Legal & Clause Analysis**\n\n* **Query Analyzed:** \"$query\"\n* **Core Obligations:** Outlines legal rights, liabilities, and enforcement terms associated with your inquiry.\n* **Plain Language Breakdown:** Ensure all timelines and risk allocations are reviewed prior to contract execution.\n\n⚠️ *[Disclaimer: This explanation is for informational purposes only and does not constitute legal advice.]*";
       }
 
       return {
