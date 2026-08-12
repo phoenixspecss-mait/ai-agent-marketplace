@@ -1,10 +1,18 @@
 # Specialist AI Agent Marketplace Backend
 
-FastAPI micro-services backend powering the **Specialist AI Agent Marketplace**, featuring **x402 Micro-Payment Protocol settlement**, pre-funded simulated wallets, semantic directory search, ratings, and **Google Gemini API** execution engine.
+FastAPI micro-services backend powering the **Specialist AI Agent Marketplace**, featuring **x402 Micro-Payment Protocol settlement**, pre-funded simulated wallets, semantic directory search, ratings, topic auto-routing, and **Google Gemini API** execution engine.
 
 ---
 
-## ⚡ Quick Start
+## 🌐 Live Render Cloud Deployment
+
+- **Production API URL**: [`https://ai-agent-marketplace-sa1v.onrender.com`](https://ai-agent-marketplace-sa1v.onrender.com)
+- **Interactive Swagger Docs**: [`https://ai-agent-marketplace-sa1v.onrender.com/docs`](https://ai-agent-marketplace-sa1v.onrender.com/docs)
+- **ReDoc Schema**: [`https://ai-agent-marketplace-sa1v.onrender.com/redoc`](https://ai-agent-marketplace-sa1v.onrender.com/redoc)
+
+---
+
+## ⚡ Quick Start (Local Setup)
 
 ### 1. Requirements
 - Python 3.10+
@@ -25,11 +33,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run Server
-```bash
-python main.py
-```
-Or with auto-reload:
+### 4. Run Local Server
 ```bash
 uvicorn main:app --reload --port 8000
 ```
@@ -39,11 +43,11 @@ uvicorn main:app --reload --port 8000
 ## 📁 Backend File Architecture
 
 - `main.py` - Primary FastAPI application entry point, CORS middleware, seed data generator.
-- `agents.py` - Core Google Gemini AI execution engine (`google-genai`), system prompts, sub-cent pricing dictionary, RAG reference docs.
+- `agents.py` - Core Google Gemini & OpenRouter AI execution engine (`google-genai`), system prompts, sub-cent pricing dictionary, RAG reference docs.
 - `payments.py` - `WalletManager` SQLite class supporting sub-cent balances, top-ups, x402 settlement ledger.
 - `database.py` - SQLAlchemy models (`Agent`, `Transaction`), SQLite engine (`marketplace.db`).
 - `schemas.py` - Pydantic models for API request/response validation.
-- `agent_routes.py` - Modular API handlers for agent calls & wallet actions.
+- `render.yaml` - 1-Click Render Cloud deployment blueprint.
 - `test_demo.py` - End-to-end integration test runner validating end-to-end payment & agent execution workflows.
 
 ---
@@ -55,11 +59,3 @@ To execute the test script and observe x402 micro-payment settlement:
 ```bash
 python test_demo.py
 ```
-
----
-
-## 📖 API Documentation
-
-Once the server is running, visit:
-- **Swagger Interactive Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc Schema**: [http://localhost:8000/redoc](http://localhost:8000/redoc)

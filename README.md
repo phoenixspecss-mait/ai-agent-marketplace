@@ -2,11 +2,20 @@
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B.svg?style=flat&logo=Flutter&logoColor=white)](https://flutter.dev/)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB.svg?style=flat&logo=Python&logoColor=white)](https://www.python.org/)
+[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7.svg?style=flat&logo=Render&logoColor=white)](https://ai-agent-marketplace-sa1v.onrender.com)
 [![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-v1.0+-4285F4.svg?style=flat&logo=Google&logoColor=white)](https://ai.google.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A unified platform combining a **Specialist AI Agent Directory**, **Semantic Search & Discovery**, **x402 Protocol Sub-Cent Micro-Payment Settlement**, and an **Autonomous Agent Execution Engine** backed by Google Gemini and a cross-platform **Flutter** frontend.
+A unified platform combining a **Specialist AI Agent Directory**, **Semantic Topic Auto-Routing & Search**, **x402 Protocol Sub-Cent Micro-Payment Settlement**, and an **Autonomous Agent Execution Engine** backed by Google Gemini & OpenRouter with a cross-platform **Flutter** frontend.
+
+---
+
+## 🌐 Live Cloud Deployment
+
+The backend server is live on Render:
+- **Production API Endpoint**: [`https://ai-agent-marketplace-sa1v.onrender.com`](https://ai-agent-marketplace-sa1v.onrender.com)
+- **Interactive Swagger Documentation**: [`https://ai-agent-marketplace-sa1v.onrender.com/docs`](https://ai-agent-marketplace-sa1v.onrender.com/docs)
+- **ReDoc API Reference**: [`https://ai-agent-marketplace-sa1v.onrender.com/redoc`](https://ai-agent-marketplace-sa1v.onrender.com/redoc)
 
 ---
 
@@ -18,14 +27,15 @@ The system consists of two primary modules:
 AI Agent Marketplace/
 ├── Backend/                # Python FastAPI Micro-Payments & Agent Execution Engine
 │   ├── main.py             # Main FastAPI Server & Marketplace Lifecycle
-│   ├── agents.py           # Gemini AI Specialist Agents & Prompt Scoping
+│   ├── agents.py           # Gemini & OpenRouter AI Specialist Execution Engine
 │   ├── payments.py         # Wallet Settlement Manager & x402 Protocol Broker
 │   ├── database.py         # SQLAlchemy ORM Models & SQLite DB Setup
 │   ├── schemas.py          # Pydantic Schemas & Data Contracts
-│   ├── agent_routes.py     # Endpoint Handlers & Micro-Payment Enforcers
+│   ├── render.yaml         # Render Cloud Deployment Blueprint
 │   └── test_demo.py        # End-to-End Automated Verification Test Suite
 └── frontend/               # Cross-Platform Flutter Application
     ├── lib/                # Flutter UI Views, Services, and State Providers
+    │   └── services/       # ApiService connected to live Render cloud backend
     ├── assets/             # Images, Icons, and Fonts
     └── README.md           # Mobile/Web Client Specific Documentation
 ```
@@ -34,30 +44,31 @@ AI Agent Marketplace/
 
 ## 🚀 Key Features
 
-### 🤖 1. Specialist AI Agents Engine
-Powered by **Google Gemini API** (`google-genai`), providing specialized domain-scoped AI agents with sub-cent pricing per call:
+### 🤖 1. Specialist AI Agents & Topic Auto-Routing
+Powered by **Google Gemini API** (`google-genai`) and **OpenRouter**, providing specialized domain-scoped AI agents with sub-cent pricing per call:
 
 | Agent ID | Display Name | Sub-Cent Price | Scoped Capabilities |
 |---|---|---|---|
-| `legal-clause-explainer` | Rental & Legal Clause Explainer | `$0.005` USD | Explains complex legal terms in plain English with mandatory liability disclaimers. |
+| `legal-clause-explainer` | Rental & Legal Clause Explainer | `$0.005` USD | Explains legal agreement clauses in plain language with mandatory liability disclaimers. |
 | `punjabi-slang-translator` | Punjabi & Regional Slang Translator | `$0.002` USD | Translates regional idioms, slang, and cultural context. |
 | `symptom-triage-explainer` | Medical Symptom Triage Explainer | `$0.003` USD | Provides educational triage guidance and emergency warning indicators. |
 | `career-agent` | Tech Career Resume Agent | `$0.004` USD | Evaluates tech resumes, bullet points, and role optimization. |
 
+- **Dynamic Topic Auto-Routing**: User input queries are automatically classified via `/search` (semantic transformer/keyword match) to automatically select and invoke the most relevant specialist AI agent for that topic.
+
 ### 💳 2. x402 Micro-Payment Settlement Broker
 - **Pre-funded Simulated Wallets**: Tracks user balances with 4-decimal-place precision (sub-cent micro-transactions).
-- **x402 Protocol Standard Compliance**: Automatically returns `HTTP 402 Payment Required` when user balance is lower than the agent cost, including settlement protocol details in response headers/body.
-- **Instant Settlement**: Deducts exact call fee and issues unique cryptographic transaction settlement hashes.
-- **Auto-Seeding**: Automatically seeds new demo users with a `$5.00` USD starter balance.
+- **x402 Protocol Standard Compliance**: Automatically returns `HTTP 402 Payment Required` when user balance is lower than the agent cost, including settlement protocol details.
+- **Instant Settlement**: Deducts exact call fee and issues transaction logs.
 
 ### 🔍 3. Semantic Search & Agent Discovery
-- Query agent capabilities using keywords and categories.
+- Query agent capabilities using natural language keywords and categories.
 - Real-time user rating and feedback collection system.
 
 ### 📱 4. Flutter Cross-Platform Frontend
 - Responsive mobile & web UI built with Flutter 3.x.
-- Firebase integration for authentication, realtime database, and storage.
-- Agent browsing catalog, wallet balance manager, and agent interactive view.
+- Connected directly to the live Render cloud backend (`api_service.dart`).
+- Dynamic verified domain badges (`VERIFIED LEGAL`, `VERIFIED LINGUISTICS`, `VERIFIED MEDICAL`).
 
 ---
 
@@ -66,12 +77,21 @@ Powered by **Google Gemini API** (`google-genai`), providing specialized domain-
 ### Prerequisites
 
 - **Python**: 3.10 or higher
-- **Flutter SDK**: 3.x or higher (for frontend development)
+- **Flutter SDK**: 3.x or higher
 - **Google Gemini API Key**: Obtainable from [Google AI Studio](https://aistudio.google.com/)
 
 ---
 
-### Backend Setup & Execution
+### Cloud Backend Deployment (Render)
+
+The backend is configured for 1-click deployment on Render via [`render.yaml`](Backend/render.yaml):
+- **Root Directory**: `Backend`
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+---
+
+### Local Backend Execution
 
 1. **Navigate to the Backend Directory**:
    ```bash
@@ -98,16 +118,8 @@ Powered by **Google Gemini API** (`google-genai`), providing specialized domain-
 
 5. **Start the FastAPI Server**:
    ```bash
-   python main.py
-   ```
-   *Alternatively, run with Uvicorn:*
-   ```bash
    uvicorn main:app --reload --port 8000
    ```
-
-6. **Access Interactive API Docs**:
-   - Swagger UI: `http://localhost:8000/docs`
-   - Redoc: `http://localhost:8000/redoc`
 
 ---
 
@@ -127,81 +139,6 @@ Powered by **Google Gemini API** (`google-genai`), providing specialized domain-
    ```bash
    flutter run
    ```
-   *(Add `-d chrome` for web, or specify connected mobile device ID)*
-
----
-
-## 📡 API Reference
-
-### Core Endpoints
-
-#### `GET /api/marketplace/agents`
-Returns a list of all registered specialist agents in the directory.
-
-#### `POST /api/marketplace/search`
-Search agents by text query or category.
-```json
-{
-  "query": "explain legal lease clause",
-  "category": "legal-clause-explainer"
-}
-```
-
-#### `POST /api/marketplace/agents/{agent_id}/call`
-Executes an AI agent call with x402 payment settlement.
-- **Request Body**:
-  ```json
-  {
-    "user_id": "demo_user_01",
-    "query": "What does a binding arbitration clause mean?"
-  }
-  ```
-- **Success Response (`200 OK`)**:
-  ```json
-  {
-    "status": "success",
-    "agent_id": "legal-clause-explainer",
-    "cost_usd": 0.005,
-    "remaining_balance_usd": 4.995,
-    "response": "Core terms explained...",
-    "settlement_hash": "tx_a1b2c3d4..."
-  }
-  ```
-- **Insufficient Funds Response (`402 Payment Required`)**:
-  ```json
-  {
-    "status": "error",
-    "error": "Payment Required",
-    "message": "Insufficient wallet balance ($0.0010 USD). Call cost is $0.0050 USD.",
-    "x402_protocol": {
-      "status": 402,
-      "topup_endpoint": "/api/marketplace/wallet/topup"
-    }
-  }
-  ```
-
-#### `POST /api/marketplace/wallet/topup`
-Fund user wallet balance.
-```json
-{
-  "user_id": "demo_user_01",
-  "amount": 5.00
-}
-```
-
-#### `GET /api/marketplace/wallet/{user_id}/balance`
-Retrieve current USD wallet balance for specified user.
-
----
-
-## 🧪 Testing & Automated Demonstration
-
-Run the automated test suite to verify wallet settlement, agent calls, x402 protocol enforcement, and top-up flows:
-
-```bash
-cd Backend
-python test_demo.py
-```
 
 ---
 
