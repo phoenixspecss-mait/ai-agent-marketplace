@@ -368,8 +368,8 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
               const SizedBox(height: 16),
 
               // Subtitle
-              const SizedBox(
-                maxWidth: 620,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 620),
                 child: Text(
                   "Connect with specialized AI agents trained on jurisdictional precedent, compliance frameworks, and contract law.",
                   textAlign: TextAlign.center,
@@ -384,7 +384,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
 
               // Large Prompt Box Container (Image 4)
               Container(
-                maxWidth: 780,
+                constraints: const BoxConstraints(maxWidth: 780),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: const Color(0xFF131D1A),
@@ -589,7 +589,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       margin: const EdgeInsets.only(bottom: 24),
       alignment: Alignment.centerRight,
       child: Container(
-        maxWidth: 700,
+        constraints: const BoxConstraints(maxWidth: 700),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: const Color(0xFF1D2A27),

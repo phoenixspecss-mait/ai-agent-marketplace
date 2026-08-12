@@ -458,6 +458,8 @@ class _RegisterLoginViewState extends State<RegisterLoginView> {
         ),
       ],
     );
+  }
+
   Widget _buildDesktopAuthLayout() {
     return Scaffold(
       backgroundColor: const Color(0xFF0A110F),

@@ -427,10 +427,10 @@ class _AccountViewState extends State<AccountView> {
                 const Divider(height: 1, color: Color(0xFF23322E)),
 
                 // Sample Activity Rows (Image 2)
-                _buildDesktopActivityRow("Oct 24, 2026\n14:32 PST", "Contract Review: NDA standard terms", "Deep Analysis Model • 450 tokens", -\$0.45, Icons.description_outlined),
-                _buildDesktopActivityRow("Oct 24, 2026\n10:15 PST", "Quick Citation: California Labor Code § 2802", "Fast Search Model • 120 tokens", -\$0.08, Icons.find_in_page_outlined),
-                _buildDesktopActivityRow("Oct 23, 2026\n09:00 PST", "Auto-Reload (Visa ending in 4242)", "Wallet Top-up", +\$50.00, Icons.account_balance_wallet_outlined, isPositive: true),
-                _buildDesktopActivityRow("Oct 22, 2026\n16:45 PST", "Precedent Search: Tech IP Assignment", "Deep Analysis Model • 890 tokens", -\$0.92, Icons.gavel_outlined),
+                _buildDesktopActivityRow("Oct 24, 2026\n14:32 PST", "Contract Review: NDA standard terms", "Deep Analysis Model • 450 tokens", -0.45, Icons.description_outlined),
+                _buildDesktopActivityRow("Oct 24, 2026\n10:15 PST", "Quick Citation: California Labor Code § 2802", "Fast Search Model • 120 tokens", -0.08, Icons.find_in_page_outlined),
+                _buildDesktopActivityRow("Oct 23, 2026\n09:00 PST", "Auto-Reload (Visa ending in 4242)", "Wallet Top-up", 50.00, Icons.account_balance_wallet_outlined, isPositive: true),
+                _buildDesktopActivityRow("Oct 22, 2026\n16:45 PST", "Precedent Search: Tech IP Assignment", "Deep Analysis Model • 890 tokens", -0.92, Icons.gavel_outlined),
 
                 const Divider(height: 1, color: Color(0xFF23322E)),
 
