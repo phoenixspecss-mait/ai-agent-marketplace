@@ -29,7 +29,7 @@ from schemas import (
     SearchQuery, SearchResult, TransactionLog
 )
 
-from agents import run_specialist, AGENT_PRICING, SYSTEM_PROMPTS
+from agents import run_specialist, AGENT_PRICING, SYSTEM_PROMPTS, get_active_llm_provider
 from payments import wallet_manager
 
 from contextlib import asynccontextmanager
@@ -105,6 +105,7 @@ def read_root():
         "service": "Specialist AI Agent Marketplace & Micro-Payments Broker",
         "status": "operational",
         "available_agents": list(SYSTEM_PROMPTS.keys()),
+        "active_llm_provider": get_active_llm_provider(),
         "endpoints": [
             "/agents", "/search", "/api/marketplace/call",
             "/api/marketplace/wallet/balance", "/api/marketplace/wallet/topup"
@@ -113,7 +114,11 @@ def read_root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "active_llm_provider": get_active_llm_provider(),
+        "wallet_system": "x402 Metro-Card (USDC on Base testnet)"
+    }
 
 # ---------------------------------------------------------------------------
 # Step 3: Agent Directory & CRUD (from ai-agent-marketplace-main)
@@ -250,19 +255,38 @@ def topup_wallet(req: TopUpRequest):
 def call_agent(req: AgentCallRequest, db: Session = Depends(get_db)):
     """
     Executes a Specialist AI Agent query with sub-cent micro-payment settlement (x402 protocol).
+    Exposes 4-step broker sequence: discovery -> comparison -> settlement -> synthesis.
     """
     # Normalize agent_id
     agent_key = req.agent_id
     if agent_key not in SYSTEM_PROMPTS:
-        # Fallback mapping
-        if "slang" in agent_key:
+        if "slang" in agent_key or "translator" in agent_key:
             agent_key = "punjabi-slang-translator"
-        elif "symptom" in agent_key or "health" in agent_key:
+        elif "symptom" in agent_key or "health" in agent_key or "medical" in agent_key:
             agent_key = "symptom-triage-explainer"
+        elif "career" in agent_key or "tech" in agent_key or "stem" in agent_key:
+            agent_key = "career-agent"
         else:
-            agent_key = "legal-clause-explainer"
+            query_lower = req.query.lower()
+            if any(k in query_lower for k in ["jee", "math", "calculus", "integration", "physics", "chemistry", "exam", "study", "code", "tech", "resume", "career", "job", "interview", "prep", "algorithm"]):
+                agent_key = "career-agent"
+            elif any(k in query_lower for k in ["symptom", "pain", "fever", "hurt", "headache", "doctor", "health", "medical", "cardiac", "heart", "artery"]):
+                agent_key = "symptom-triage-explainer"
+            elif any(k in query_lower for k in ["slang", "translate", "hindi", "punjabi", "bhojpuri"]):
+                agent_key = "punjabi-slang-translator"
+            else:
+                agent_key = "legal-clause-explainer"
 
-    agent_cost = AGENT_PRICING.get(agent_key, 0.005)
+    # Single Source of Truth for Pricing (from Database)
+    db_agent = db.query(Agent).filter(
+        (Agent.endpoint_or_identifier == agent_key) | (Agent.category == agent_key)
+    ).first()
+
+    if db_agent and db_agent.price_per_call > 0:
+        agent_cost = db_agent.price_per_call
+    else:
+        agent_cost = AGENT_PRICING.get(agent_key, 0.005)
+
     current_balance = wallet_manager.get_balance(req.user_id)
 
     # Balance check (x402 402 Payment Required)
@@ -282,7 +306,7 @@ def call_agent(req: AgentCallRequest, db: Session = Depends(get_db)):
 
     # Deduct Micro-Payment
     success, settlement_msg, remaining_balance = wallet_manager.deduct_payment(
-        req.user_id, req.agent_id, agent_cost
+        req.user_id, agent_key, agent_cost
     )
 
     if not success:
@@ -294,20 +318,47 @@ def call_agent(req: AgentCallRequest, db: Session = Depends(get_db)):
     # Invoke Agent LLM execution engine
     try:
         result = run_specialist(agent_key, req.query)
-        # Log transaction in database
+
+        # Log transaction in database for specialist dashboard earnings
         try:
-            db_txn = Transaction(agent_id=1, amount=agent_cost, query_text=req.query)
+            agent_db_id = db_agent.id if db_agent else 1
+            db_txn = Transaction(agent_id=agent_db_id, amount=agent_cost, query_text=req.query)
             db.add(db_txn)
             db.commit()
         except Exception:
             pass
 
+        reasoning_chain = [
+            {
+                "step": "search",
+                "title": "Discover Specialist",
+                "detail": f"Matched query to candidate agent '{db_agent.name if db_agent else agent_key}'"
+            },
+            {
+                "step": "compare",
+                "title": "Evaluate Pricing",
+                "detail": f"Selected '{db_agent.name if db_agent else agent_key}' at ${agent_cost:.4f} USD/call"
+            },
+            {
+                "step": "pay",
+                "title": "x402 Settlement",
+                "detail": settlement_msg
+            },
+            {
+                "step": "synthesize",
+                "title": "Synthesize Answer",
+                "detail": f"Generated specialist answer via {get_active_llm_provider()}"
+            }
+        ]
+
         return {
             "status": "success",
-            "agent_id": req.agent_id,
+            "agent_id": agent_key,
+            "chosen_agent_name": db_agent.name if db_agent else agent_key,
             "cost_usd": agent_cost,
             "payment_settlement": settlement_msg,
             "remaining_balance_usd": remaining_balance,
+            "reasoning_chain": reasoning_chain,
             "result": result
         }
     except Exception as err:

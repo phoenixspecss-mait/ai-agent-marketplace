@@ -17,6 +17,7 @@ class MessageItem {
   final String? agentId;
   final String? badgeText;
   final String? settlement;
+  final List<Map<String, dynamic>>? reasoningChain;
   final bool isError;
 
   MessageItem({
@@ -25,6 +26,7 @@ class MessageItem {
     this.agentId,
     this.badgeText,
     this.settlement,
+    this.reasoningChain,
     this.isError = false,
   });
 }
@@ -216,6 +218,14 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           badge = "VERIFIED STEM & CAREER";
         }
 
+        final reasoningRaw = response['reasoning_chain'];
+        List<Map<String, dynamic>>? reasoningList;
+        if (reasoningRaw is List) {
+          reasoningList = reasoningRaw
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        }
+
         _messages.add(
           MessageItem(
             sender: 'ai',
@@ -223,6 +233,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             agentId: agentId,
             badgeText: badge,
             settlement: response['settlement'],
+            reasoningChain: reasoningList,
           ),
         );
         if (response['remaining_balance'] != null) {
@@ -811,6 +822,69 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     return cleaned.trim();
   }
 
+  Widget _buildReasoningTimelineWidget(List<Map<String, dynamic>> chain) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C1412),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF1E2C29)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.route_rounded, color: AppTheme.emeraldGreen, size: 14),
+              SizedBox(width: 6),
+              Text(
+                "EXECUTION REASONING SEQUENCE",
+                style: TextStyle(
+                  color: AppTheme.emeraldGreen,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...chain.map((stepMap) {
+            final title = stepMap['title'] ?? stepMap['step'] ?? "";
+            final detail = stepMap['detail'] ?? "";
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("• ", style: TextStyle(color: AppTheme.emeraldGreen, fontSize: 12)),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                        children: [
+                          TextSpan(
+                            text: "$title: ",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(text: detail),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDesktopAiBubble(MessageItem msg) {
     final icon = _getDomainIcon(msg.badgeText, msg.agentId);
     final title = _getDomainTitle(msg.badgeText, msg.agentId, msg.isError);
@@ -871,6 +945,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 16),
+
+          if (msg.reasoningChain != null && msg.reasoningChain!.isNotEmpty)
+            _buildReasoningTimelineWidget(msg.reasoningChain!),
 
           Text(
             cleanedText,
