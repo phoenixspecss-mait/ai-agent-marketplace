@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart'
         FirebaseAuth,
         FirebaseAuthException,
         GoogleAuthProvider,
+        UserCredential,
         PhoneAuthCredential,
         PhoneAuthProvider,
         FacebookAuthProvider;
@@ -214,28 +215,52 @@ class FirebaseAuthProvider implements AuthProvider {
   @override
   Future<AuthUser> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        scopes: ['email'],
-        serverClientId:
-            '845900841870-u70fenbiiu6qrcom0f0os0lcfpv7m28s.apps.googleusercontent.com',
-      ).signIn();
+      if (kIsWeb) {
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
 
-      if (googleUser == null) throw GoogleSignInCancelledException();
+        UserCredential userCredential;
+        try {
+          userCredential = await FirebaseAuth.instance.signInWithPopup(googleProvider);
+        } catch (popupError) {
+          debugPrint("signInWithPopup error, trying signInWithRedirect: $popupError");
+          await FirebaseAuth.instance.signInWithRedirect(googleProvider);
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            return AuthUser.fromFirebase(user);
+          }
+          throw popupError;
+        }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+        final user = userCredential.user ?? FirebaseAuth.instance.currentUser;
+        if (user == null) throw GenericAuthException();
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+        return AuthUser.fromFirebase(user);
+      } else {
+        final GoogleSignInAccount? googleUser = await GoogleSignIn(
+          scopes: ['email'],
+          serverClientId:
+              '845900841870-u70fenbiiu6qrcom0f0os0lcfpv7m28s.apps.googleusercontent.com',
+        ).signIn();
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+        if (googleUser == null) throw GoogleSignInCancelledException();
 
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw GenericAuthException();
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
 
-      return AuthUser.fromFirebase(user);
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) throw GenericAuthException();
+
+        return AuthUser.fromFirebase(user);
+      }
     } catch (e) {
       debugPrint("GOOGLE SIGN IN ERROR DETAILS: $e");
       if (e is GoogleSignInCancelledException) rethrow;
