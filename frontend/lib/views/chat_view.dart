@@ -77,7 +77,6 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     final text = presetQuery ?? _queryController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
-    final agentId = agentIdOverride ?? _selectedAgentId;
     _queryController.clear();
 
     setState(() {
@@ -88,6 +87,32 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       _isLoading = true;
     });
     _scrollToBottom();
+
+    // Dynamically assign agent according to user query topic
+    String agentId = agentIdOverride ?? "";
+    if (agentId.isEmpty) {
+      try {
+        final searchResults = await ApiService.searchAgents(text);
+        if (searchResults.isNotEmpty) {
+          final topAgent = searchResults.first['agent'];
+          if (topAgent != null && topAgent is Map) {
+            agentId = (topAgent['endpoint_or_identifier'] ?? topAgent['category'] ?? "").toString();
+          }
+        }
+      } catch (_) {}
+
+      // Fallback topic classifier if search is offline or unindexed
+      if (agentId.isEmpty) {
+        final lower = text.toLowerCase();
+        if (lower.contains("slang") || lower.contains("bhojpuri") || lower.contains("punjabi") || lower.contains("translate") || lower.contains("hindi") || lower.contains("meaning") || lower.contains("vibe") || lower.contains("idiom")) {
+          agentId = "punjabi-slang-translator";
+        } else if (lower.contains("symptom") || lower.contains("pain") || lower.contains("fever") || lower.contains("hurt") || lower.contains("headache") || lower.contains("medical") || lower.contains("sprain") || lower.contains("doctor") || lower.contains("health") || lower.contains("triage")) {
+          agentId = "symptom-triage-explainer";
+        } else {
+          agentId = "legal-clause-explainer";
+        }
+      }
+    }
 
     final userId = FirebaseAuth.instance.currentUser?.uid ?? "demo_user_01";
     final response = await ApiService.callAgent(
