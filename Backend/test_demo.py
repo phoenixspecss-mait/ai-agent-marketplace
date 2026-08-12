@@ -25,6 +25,7 @@ def run_integration_tests():
     with wallet_manager._get_connection() as conn:
         conn.execute("DELETE FROM wallets WHERE user_id = ?", (user_id,))
         conn.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
+        conn.execute("INSERT INTO wallets (user_id, balance) VALUES (?, 0.0)", (user_id,))
         conn.commit()
 
     # 1. Test Root Endpoint
